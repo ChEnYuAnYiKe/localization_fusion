@@ -8,6 +8,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/Imu.h>
+#include <sensor_msgs/MagneticField.h>
 
 #include "imu_gps_localizer/imu_gps_localizer.h"
 
@@ -18,6 +19,8 @@ public:
 
     void ImuCallback(const sensor_msgs::ImuConstPtr& imu_msg_ptr);
 
+    void MagCallBack(const sensor_msgs::MagneticFieldConstPtr& mag_msg_ptr);
+
     void GpsPositionCallback(const sensor_msgs::NavSatFixConstPtr& gps_msg_ptr);
 
 private:
@@ -27,6 +30,7 @@ private:
     void ConvertStateToRosTopic(const ImuGpsLocalization::State& state);
     
     ros::Subscriber imu_sub_;
+    ros::Subscriber mag_sub_;  // added Subscriber to accept the topic /imu/mag
     ros::Subscriber gps_position_sub_;
     ros::Publisher state_pub_;
 

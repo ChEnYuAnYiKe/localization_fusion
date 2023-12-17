@@ -17,6 +17,9 @@ public:
 
     bool ProcessImuData(const ImuDataPtr imu_data_ptr, State* fused_state);
 
+    bool ProcessMagData(const MagDataPtr mag_data_ptr); // added function: to storage mag_data and 
+                                                        // cal the initial yaw of the UAV
+
     bool ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr);
 
 private:

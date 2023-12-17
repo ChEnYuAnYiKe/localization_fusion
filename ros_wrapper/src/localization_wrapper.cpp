@@ -35,6 +35,7 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
 
     // Subscribe topics.
     imu_sub_ = nh.subscribe("/imu/data", 10,  &LocalizationWrapper::ImuCallback, this);
+    mag_sub_ = nh.subscribe("/imu/mag", 10, &LocalizationWrapper::MagCallBack, this);
     gps_position_sub_ = nh.subscribe("/fix", 10,  &LocalizationWrapper::GpsPositionCallback, this);
 
     state_pub_ = nh.advertise<nav_msgs::Path>("fused_path", 10);
@@ -68,6 +69,19 @@ void LocalizationWrapper::ImuCallback(const sensor_msgs::ImuConstPtr& imu_msg_pt
     // Log fused state.
     LogState(fused_state);
 }
+
+void LocalizationWrapper::MagCallBack(const sensor_msgs::MagneticFieldConstPtr& mag_msg_ptr) {
+    ImuGpsLocalization::MagDataPtr mag_data_ptr = std::make_shared<ImuGpsLocalization::MagData>();
+    mag_data_ptr->timestamp = mag_msg_ptr->header.stamp.toSec();
+    mag_data_ptr->mag_xyz << mag_msg_ptr->magnetic_field.x,
+                             mag_msg_ptr->magnetic_field.y,
+                             mag_msg_ptr->magnetic_field.z;
+    mag_data_ptr->cov = Eigen::Map<const Eigen::Matrix3d>(mag_msg_ptr->magnetic_field_covariance.data());
+
+    imu_gps_localizer_ptr_->ProcessMagData(mag_data_ptr);
+
+
+};  // added function: to accept the mag_msg and process it
 
 void LocalizationWrapper::GpsPositionCallback(const sensor_msgs::NavSatFixConstPtr& gps_msg_ptr) {
     // Check the gps_status.

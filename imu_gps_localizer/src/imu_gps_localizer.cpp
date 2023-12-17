@@ -32,6 +32,13 @@ bool ImuGpsLocalizer::ProcessImuData(const ImuDataPtr imu_data_ptr, State* fused
     return true;
 }
 
+bool ImuGpsLocalizer::ProcessMagData(const MagDataPtr mag_data_ptr) {
+    if (!initialized_) {
+        initializer_->AddMagData(mag_data_ptr);
+        return false;
+    }
+};
+
 bool ImuGpsLocalizer::ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr) {
     if (!initialized_) {
         if (!initializer_->AddGpsPositionData(gps_data_ptr, &state_)) {

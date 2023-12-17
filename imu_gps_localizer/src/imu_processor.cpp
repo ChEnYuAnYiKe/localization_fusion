@@ -27,7 +27,6 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
     const Eigen::Vector3d gyro_unbias = 0.5 * (last_imu->gyro + cur_imu->gyro) - last_state.gyro_bias;
 
     // Normal state. 
-    // Using P58. of "Quaternion kinematics for the error-state Kalman Filter".
     state->G_p_I = last_state.G_p_I + last_state.G_v_I * delta_t + 
                    0.5 * (last_state.G_R_I * acc_unbias + gravity_) * delta_t2;
     state->G_v_I = last_state.G_v_I + (last_state.G_R_I * acc_unbias + gravity_) * delta_t;
@@ -35,7 +34,6 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
     if (delta_angle_axis.norm() > 1e-12) {
         state->G_R_I = last_state.G_R_I * Eigen::AngleAxisd(delta_angle_axis.norm(), delta_angle_axis.normalized()).toRotationMatrix();
     }
-    // Error-state. Not needed.
 
     // Covariance of the error-state.   
     Eigen::Matrix<double, 15, 15> Fx = Eigen::Matrix<double, 15, 15>::Identity();
