@@ -35,7 +35,7 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
     }
 
     const ImuDataPtr last_imu_ptr = imu_buffer_.back();
-    // TODO: how to synchronize all sensors.
+    // TODO: need to figure out how to synchronize all sensors.
     if (std::abs(gps_data_ptr->timestamp - last_imu_ptr->timestamp) > 0.5) {
         LOG(ERROR) << "[AddGpsPositionData]: Gps and imu timestamps are not synchronized!";
         return false;
@@ -138,7 +138,6 @@ bool Initializer::ComputeQuaternionFromImu(Eigen::Quaterniond* G_q) {
     Eigen::AngleAxisd pitchAngle(phi_pitch, Eigen::Vector3d::UnitY());
     Eigen::AngleAxisd yawAngle(psi_yaw, Eigen::Vector3d::UnitZ());
     *G_q = yawAngle * pitchAngle * rollAngle;
-
 
 };  // added function: use the imu_data & mag_data to cal the quaternion of UAV
 

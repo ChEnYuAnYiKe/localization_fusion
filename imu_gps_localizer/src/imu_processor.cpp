@@ -25,7 +25,7 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
     // Acc and gyro.
     const Eigen::Vector3d acc_unbias = 0.5 * (last_imu->acc + cur_imu->acc) - last_state.acc_bias;
     const Eigen::Vector3d gyro_unbias = 0.5 * (last_imu->gyro + cur_imu->gyro) - last_state.gyro_bias;
-
+    // TODO need to change the transfer function from ESKF to EKF
     // Normal state. 
     state->G_p_I = last_state.G_p_I + last_state.G_v_I * delta_t + 
                    0.5 * (last_state.G_R_I * acc_unbias + gravity_) * delta_t2;
