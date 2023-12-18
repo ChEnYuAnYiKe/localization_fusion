@@ -67,6 +67,9 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
         return false;
     }
 
+    // generate rotation matrix from quaternion
+    state->G_R_I = state->G_q.toRotationMatrix();
+
     // Set bias to zero.
     state->acc_bias.setZero();
     state->gyro_bias.setZero();

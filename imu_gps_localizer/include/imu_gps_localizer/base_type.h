@@ -36,12 +36,13 @@ struct State {
     Eigen::Vector3d G_p_I;     // The original point of the IMU frame in the Global frame.
     Eigen::Vector3d G_v_I;     // The velocity original point of the IMU frame in the Global frame.
     Eigen::Quaterniond G_q;    // The quaternions of the UAV in the Global coord. (added)
-    Eigen::Matrix3d G_R_I;     // The rotation from the IMU frame to the Global frame.
     Eigen::Vector3d acc_bias;  // The bias of the acceleration sensor.
     Eigen::Vector3d gyro_bias; // The bias of the gyroscope sensor.
 
+    Eigen::Matrix3d G_R_I;     // The rotation from the IMU frame to the Global frame.
+
     // Covariance Matirx.
-    Eigen::Matrix<double, 16, 16> cov;  // Changed! (from 15-dim to 16-dim) 
+    Eigen::Matrix<double, 16, 16> cov;  // Changed! from 15-dim to 16-dim
                                         // using quaternions(4-dim) instead of picth/roll/yaw
     // The imu data.
     ImuDataPtr imu_data_ptr; 
