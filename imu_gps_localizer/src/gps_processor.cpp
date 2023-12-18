@@ -25,6 +25,41 @@ bool GpsProcessor::UpdateStateByGpsPosition(const Eigen::Vector3d& init_lla, con
     state->cov = I_KH * P * I_KH.transpose() + K * V * K.transpose();
 }
 
+bool GpsProcessor::CorrectStateByGpsPosition(const Eigen::Vector3d& init_lla, const GpsPositionDataPtr gps_data_ptr, State*state) {
+    // ****************************************************************************************************
+    // STEP 4：Set the Measurement Jacobian matrix 
+    C_ = gps_data_ptr->cov;
+    G_.setZero();
+    G_.block<3,3>(INDEX_MEASUREMENT_POSI, INDEX_MEASUREMENT_POSI) = Eigen::Matrix3d::Identity();
+    // ****************************************************************************************************
+
+    // ****************************************************************************************************
+    // STEP 5:Calculate the Kalman gain
+    const Eigen::MatrixXd& P = state->cov;
+    R_ = gps_data_ptr->cov;
+    K_ = P * G_.transpose() * (G_ * P * G_.transpose() + C_ * R_ * C_.transpose()).inverse();
+    // ****************************************************************************************************
+    
+    // ****************************************************************************************************
+    // STEP 6: Calculate the estimation of the posterior state 
+    Eigen::Vector3d G_p_Gps;
+    ConvertLLAToENU(init_lla, gps_data_ptr->lla, &G_p_Gps);  // Convert wgs84 to ENU frame.
+
+    state->state_vector = state->state_vector + K_ * (G_p_Gps - G_ * state->state_vector);
+
+    //TODO 将state_vector中的数据重新分发到state中对应的变量中去
+
+    // ****************************************************************************************************
+
+    // ****************************************************************************************************
+    // STEP 7: Updates the covariance matrix for the posterior state estimation error
+    state->cov = (TypeMatrixP::Identity() - K_ * G_) * P * (TypeMatrixP::Identity() - K_ * G_).transpose()
+                    + K_ * C_ * K_.transpose();
+
+    // ****************************************************************************************************
+
+}  // added function: to correct the state-vector by using the gps data in the way of EKF
+
 void GpsProcessor::ComputeJacobianAndResidual(const Eigen::Vector3d& init_lla,  
                                               const GpsPositionDataPtr gps_data, 
                                               const State& state,

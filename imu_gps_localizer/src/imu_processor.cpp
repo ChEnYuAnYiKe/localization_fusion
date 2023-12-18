@@ -47,11 +47,15 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
         delta_q.vec() = sin(delta_angle.norm()) * delta_angle.normalized();
         state->G_q = (last_state.G_q * delta_q).normalized();
     }
+
+    //  Combine all state vectors into a single vector
+    state->state_vector << state->G_p_I, state->G_v_I, 
+                            state->G_q.w(), state->G_q.x(), state->G_q.y(), state->G_q.z(),
+                            state->acc_bias, state->gyro_bias;
     
     // Update the rotation matrix
     state->G_R_I = state->G_q.toRotationMatrix();
 
-    // STEP 1 END 
     // ****************************************************************************************************
 
     /*
@@ -123,7 +127,6 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
     Q_.block<3,3>(0,0) = Eigen::Matrix3d::Identity() * gyro_noise_;
     Q_.block<3,3>(3,3) = Eigen::Matrix3d::Identity() * acc_noise_;
 
-    // STEP 2 END
     // ****************************************************************************************************
 
 
@@ -131,7 +134,6 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
     // STEP 3: Calculate the prior state estimation error covariance matrix
     state->cov = Fk * last_state.cov * Fk.transpose() + Bk * Q_ * Bk.transpose();;
 
-    // STEP 3: END
     // ****************************************************************************************************
 
     // Time and imu.

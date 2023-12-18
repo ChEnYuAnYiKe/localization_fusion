@@ -12,6 +12,8 @@ public:
 
     bool UpdateStateByGpsPosition(const Eigen::Vector3d& init_lla, const GpsPositionDataPtr gps_data_ptr, State* state);
 
+    bool CorrectStateByGpsPosition(const Eigen::Vector3d& init_lla, const GpsPositionDataPtr gps_data_ptr, State* state);
+
 private:    
     void ComputeJacobianAndResidual(const Eigen::Vector3d& init_lla,  
                                     const GpsPositionDataPtr gps_data, 
