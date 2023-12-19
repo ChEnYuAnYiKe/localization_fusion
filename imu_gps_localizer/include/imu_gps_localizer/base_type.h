@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <Eigen/Core>
+#include <Eigen/Dense>
 
 namespace ImuGpsLocalization {
 
