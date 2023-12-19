@@ -55,7 +55,7 @@ bool ImuGpsLocalizer::ProcessGpsPositionData(const GpsPositionDataPtr gps_data_p
     }
 
     // Update.
-    gps_processor_->UpdateStateByGpsPosition(init_lla_, gps_data_ptr, &state_);
+    gps_processor_->CorrectStateByGpsPosition(init_lla_, gps_data_ptr, &state_);
 
     return true;
 }

@@ -47,7 +47,16 @@ bool GpsProcessor::CorrectStateByGpsPosition(const Eigen::Vector3d& init_lla, co
 
     state->state_vector = state->state_vector + K_ * (G_p_Gps - G_ * state->state_vector);
 
-    //TODO 将state_vector中的数据重新分发到state中对应的变量中去
+    // Update the state-vector
+    state->G_p_I = state->state_vector.segment<3>(INDEX_STATE_POSI);
+    state->G_v_I = state->state_vector.segment<3>(INDEX_STATE_VEL);
+
+    Eigen::Quaterniond quat(state->state_vector.segment<4>(INDEX_STATE_ORI));
+    quat.normalize();
+    state->G_q = quat;
+
+    state->acc_bias = state->state_vector.segment<3>(INDEX_STATE_ACC_BIAS);
+    state->gyro_bias = state->state_vector.segment<3>(INDEX_STATE_GYRO_BIAS);
 
     // ****************************************************************************************************
 
