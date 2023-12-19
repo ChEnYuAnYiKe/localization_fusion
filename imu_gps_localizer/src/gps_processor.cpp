@@ -28,7 +28,9 @@ bool GpsProcessor::UpdateStateByGpsPosition(const Eigen::Vector3d& init_lla, con
 bool GpsProcessor::CorrectStateByGpsPosition(const Eigen::Vector3d& init_lla, const GpsPositionDataPtr gps_data_ptr, State*state) {
     // ****************************************************************************************************
     // STEP 4：Set the Measurement Jacobian matrix 
+    TypeMatrixC C_;
     C_ = gps_data_ptr->cov;
+    TypeMatrixG G_;
     G_.setZero();
     G_.block<3,3>(INDEX_MEASUREMENT_POSI, INDEX_MEASUREMENT_POSI) = Eigen::Matrix3d::Identity();
     // ****************************************************************************************************
@@ -36,7 +38,9 @@ bool GpsProcessor::CorrectStateByGpsPosition(const Eigen::Vector3d& init_lla, co
     // ****************************************************************************************************
     // STEP 5:Calculate the Kalman gain
     const Eigen::MatrixXd& P = state->cov;
+    TypeMatrixC R_;
     R_ = gps_data_ptr->cov;
+    TypeMatrixK K_;
     K_ = P * G_.transpose() * (G_ * P * G_.transpose() + C_ * R_ * C_.transpose()).inverse();
     // ****************************************************************************************************
     

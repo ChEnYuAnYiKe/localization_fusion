@@ -54,18 +54,6 @@ typedef typename Eigen::Matrix<double, DIM_MEASUREMENT_NOISE, DIM_MEASUREMENT_NO
 typedef typename Eigen::Matrix<double, DIM_MEASUREMENT, DIM_STATE> TypeMatrixG;  // 3*16
 typedef typename Eigen::Matrix<double, DIM_MEASUREMENT, DIM_MEASUREMENT> TypeMatrixR;  // 3*3\
 
-TypeVectorX X_;
-TypeVectorY Y_;
-TypeMatrixF F_;
-TypeMatrixB B_;
-TypeMatrixW W_;
-TypeMatrixQ Q_;
-TypeMatrixP P_;
-TypeMatrixK K_;
-TypeMatrixC C_;
-TypeMatrixG G_;
-TypeMatrixC R_;
-
 struct State {
     double timestamp;
     

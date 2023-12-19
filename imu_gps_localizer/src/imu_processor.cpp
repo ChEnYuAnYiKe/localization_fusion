@@ -84,6 +84,7 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
     // ****************************************************************************************************
     // STEP 2: Calculate the Jacobian matrix
     // changed! beacuse of the 16-dim state-vector
+    TypeMatrixF F_;
     F_.setZero();  // initializing Jacobian matrix as a zero matrix
     F_.block<3,3>(INDEX_STATE_POSI, INDEX_STATE_VEL) = Eigen::Matrix3d::Identity(); 
 
@@ -116,6 +117,7 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
                                                                         -q2,q1,q0).finished();
     F_.block<4,3>(INDEX_STATE_ORI,INDEX_STATE_GYRO_BIAS) = Fqkesi;         
 
+    TypeMatrixB B_;
     B_.setZero();
     B_.block<3,3>(INDEX_STATE_VEL, 3) = last_state.G_R_I;
     B_.block<4,3>(INDEX_STATE_ORI, 0) = Fqkesi;                           
@@ -123,6 +125,7 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
     TypeMatrixF Fk = TypeMatrixF::Identity() + F_ * delta_t;
     TypeMatrixB Bk = B_ * delta_t;
 
+    TypeMatrixQ Q_;
     Q_.setZero();
     Q_.block<3,3>(0,0) = Eigen::Matrix3d::Identity() * gyro_noise_;
     Q_.block<3,3>(3,3) = Eigen::Matrix3d::Identity() * acc_noise_;

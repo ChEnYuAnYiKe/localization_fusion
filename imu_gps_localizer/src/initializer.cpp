@@ -142,6 +142,8 @@ bool Initializer::ComputeQuaternionFromImu(Eigen::Quaterniond* G_q) {
     Eigen::AngleAxisd yawAngle(psi_yaw, Eigen::Vector3d::UnitZ());
     *G_q = yawAngle * pitchAngle * rollAngle;
 
+    return true;
+
 };  // added function: use the imu_data & mag_data to cal the quaternion of UAV
 
 
