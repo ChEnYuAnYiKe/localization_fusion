@@ -119,16 +119,16 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
 
     TypeMatrixB B_;
     B_.setZero();
-    B_.block<3,3>(INDEX_STATE_VEL, 3) = last_state.G_R_I;
-    B_.block<4,3>(INDEX_STATE_ORI, 0) = Fqkesi;                           
+    B_.block<3,3>(INDEX_STATE_VEL, 0) = last_state.G_R_I;
+    B_.block<4,3>(INDEX_STATE_ORI, 3) = Fqkesi;                           
 
     TypeMatrixF Fk = TypeMatrixF::Identity() + F_ * delta_t;
     TypeMatrixB Bk = B_ * delta_t;
 
     TypeMatrixQ Q_;
     Q_.setZero();
-    Q_.block<3,3>(0,0) = Eigen::Matrix3d::Identity() * gyro_noise_;
-    Q_.block<3,3>(3,3) = Eigen::Matrix3d::Identity() * acc_noise_;
+    Q_.block<3,3>(0,0) = Eigen::Matrix3d::Identity() * acc_noise_;
+    Q_.block<3,3>(3,3) = Eigen::Matrix3d::Identity() * gyro_noise_;
 
     // ****************************************************************************************************
 

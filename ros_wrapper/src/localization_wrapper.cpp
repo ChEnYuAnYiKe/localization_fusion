@@ -39,6 +39,7 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
     gps_position_sub_ = nh.subscribe("/fix", 10,  &LocalizationWrapper::GpsPositionCallback, this);
 
     state_pub_ = nh.advertise<nav_msgs::Path>("fused_path", 10);
+    // TODO 第一次运行结果还是有一定的抖动。后续可以把GPS转化过来的轨迹数据输出看一下，然后修改一下EKF中的协方差值看一看结果
 }
 
 LocalizationWrapper::~LocalizationWrapper() {
@@ -103,13 +104,13 @@ void LocalizationWrapper::GpsPositionCallback(const sensor_msgs::NavSatFixConstP
 }
 
 void LocalizationWrapper::LogState(const ImuGpsLocalization::State& state) {
-    const Eigen::Quaterniond G_q_I(state.G_R_I);
-    file_state_ << std::fixed << std::setprecision(15)
+    // const Eigen::Quaterniond G_q_I(state.G_R_I);
+    file_state_ << std::fixed << std::setprecision(16)
                 << state.timestamp << ","
                 << state.lla[0] << "," << state.lla[1] << "," << state.lla[2] << ","
                 << state.G_p_I[0] << "," << state.G_p_I[1] << "," << state.G_p_I[2] << ","
                 << state.G_v_I[0] << "," << state.G_v_I[1] << "," << state.G_v_I[2] << ","
-                << G_q_I.x() << "," << G_q_I.y() << "," << G_q_I.z() << "," << G_q_I.w() << ","
+                << state.G_q.x() << "," << state.G_q.y() << "," << state.G_q.z() << "," << state.G_q.w() << ","
                 << state.acc_bias[0] << "," << state.acc_bias[1] << "," << state.acc_bias[2] << ","
                 << state.gyro_bias[0] << "," << state.gyro_bias[1] << "," << state.gyro_bias[2] << "\n";
 }
@@ -131,11 +132,11 @@ void LocalizationWrapper::ConvertStateToRosTopic(const ImuGpsLocalization::State
     pose.pose.position.y = state.G_p_I[1];
     pose.pose.position.z = state.G_p_I[2];
 
-    const Eigen::Quaterniond G_q_I(state.G_R_I);
-    pose.pose.orientation.x = G_q_I.x();
-    pose.pose.orientation.y = G_q_I.y();
-    pose.pose.orientation.z = G_q_I.z();
-    pose.pose.orientation.w = G_q_I.w();
+    // const Eigen::Quaterniond G_q_I(state.G_R_I);
+    pose.pose.orientation.x = state.G_q.x();
+    pose.pose.orientation.y = state.G_q.y();
+    pose.pose.orientation.z = state.G_q.z();
+    pose.pose.orientation.w = state.G_q.w();
 
     ros_path_.poses.push_back(pose);
 }

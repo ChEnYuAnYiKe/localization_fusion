@@ -76,10 +76,10 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
 
     // Set covariance.
     state->cov.setZero();
-    // position std: 10 m
-    state->cov.block<3, 3>(0, 0) = 100. * Eigen::Matrix3d::Identity();
-    // velocity std: 10 m/s
-    state->cov.block<3, 3>(3, 3) = 100. * Eigen::Matrix3d::Identity(); 
+    // position std
+    state->cov.block<3, 3>(0, 0) = 25. * Eigen::Matrix3d::Identity();
+    // velocity std
+    state->cov.block<3, 3>(3, 3) = 25. * Eigen::Matrix3d::Identity(); 
 
     /*
     // roll pitch std 10 degree.
@@ -97,7 +97,7 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
     // Acc bias.
     state->cov.block<3, 3>(10, 10) = 0.0004 * Eigen::Matrix3d::Identity();
     // Gyro bias.
-    state->cov.block<3, 3>(13, 13) = 0.0004 * Eigen::Matrix3d::Identity();
+    state->cov.block<3, 3>(13, 13) = 0.0009 * Eigen::Matrix3d::Identity();
    
     return true;
 }

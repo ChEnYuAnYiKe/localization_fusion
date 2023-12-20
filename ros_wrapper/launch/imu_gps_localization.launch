@@ -1,6 +1,6 @@
 <launch>
     <param name="acc_noise"       type="double" value="1e-2" />
-    <param name="gyro_noise"      type="double" value="1e-4" />
+    <param name="gyro_noise"      type="double" value="1e-2" />
     <param name="acc_bias_noise"  type="double" value="1e-6" />
     <param name="gyro_bias_noise" type="double" value="1e-8" />
 
