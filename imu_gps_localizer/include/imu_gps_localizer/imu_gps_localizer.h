@@ -20,7 +20,7 @@ public:
     bool ProcessMagData(const MagDataPtr mag_data_ptr); // added function: to storage mag_data and 
                                                         // cal the initial yaw of the UAV
 
-    bool ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr);
+    bool ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Eigen::Vector3d* gps_enu);
 
 private:
     std::unique_ptr<Initializer>  initializer_;

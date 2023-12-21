@@ -33,11 +33,13 @@ private:
     ros::Subscriber mag_sub_;  // added Subscriber to accept the topic /imu/mag
     ros::Subscriber gps_position_sub_;
     ros::Publisher state_pub_;
+    ros::Publisher gps_pub;
 
     std::ofstream file_state_;
     std::ofstream file_gps_;
 
     nav_msgs::Path ros_path_;
+    nav_msgs::Path gps_path_;
 
     std::unique_ptr<ImuGpsLocalization::ImuGpsLocalizer> imu_gps_localizer_ptr_;
 };

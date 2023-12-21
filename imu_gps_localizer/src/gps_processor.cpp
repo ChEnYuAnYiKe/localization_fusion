@@ -25,7 +25,7 @@ bool GpsProcessor::UpdateStateByGpsPosition(const Eigen::Vector3d& init_lla, con
     state->cov = I_KH * P * I_KH.transpose() + K * V * K.transpose();
 }
 
-bool GpsProcessor::CorrectStateByGpsPosition(const Eigen::Vector3d& init_lla, const GpsPositionDataPtr gps_data_ptr, State*state) {
+bool GpsProcessor::CorrectStateByGpsPosition(const Eigen::Vector3d& init_lla, const GpsPositionDataPtr gps_data_ptr, State* state) {
     // ****************************************************************************************************
     // STEP 4：Set the Measurement Jacobian matrix 
     TypeMatrixC C_;

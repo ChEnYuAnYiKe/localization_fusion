@@ -39,7 +39,7 @@ bool ImuGpsLocalizer::ProcessMagData(const MagDataPtr mag_data_ptr) {
     }
 };
 
-bool ImuGpsLocalizer::ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr) {
+bool ImuGpsLocalizer::ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Eigen::Vector3d* gps_enu) {
     if (!initialized_) {
         if (!initializer_->AddGpsPositionData(gps_data_ptr, &state_)) {
             return false;
@@ -53,6 +53,8 @@ bool ImuGpsLocalizer::ProcessGpsPositionData(const GpsPositionDataPtr gps_data_p
         LOG(INFO) << "[ProcessGpsPositionData]: System initialized!";
         return true;
     }
+
+    ConvertLLAToENU(init_lla_, gps_data_ptr->lla, gps_enu);
 
     // Update.
     gps_processor_->CorrectStateByGpsPosition(init_lla_, gps_data_ptr, &state_);

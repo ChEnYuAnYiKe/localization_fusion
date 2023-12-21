@@ -39,7 +39,7 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
     gps_position_sub_ = nh.subscribe("/fix", 10,  &LocalizationWrapper::GpsPositionCallback, this);
 
     state_pub_ = nh.advertise<nav_msgs::Path>("fused_path", 10);
-    // TODO 第一次运行结果还是有一定的抖动。后续可以把GPS转化过来的轨迹数据输出看一下，然后修改一下EKF中的协方差值看一看结果
+    gps_pub = nh.advertise<nav_msgs::Path>("gps_path", 10);
 }
 
 LocalizationWrapper::~LocalizationWrapper() {
@@ -98,7 +98,19 @@ void LocalizationWrapper::GpsPositionCallback(const sensor_msgs::NavSatFixConstP
                          gps_msg_ptr->altitude;
     gps_data_ptr->cov = Eigen::Map<const Eigen::Matrix3d>(gps_msg_ptr->position_covariance.data());
 
-    imu_gps_localizer_ptr_->ProcessGpsPositionData(gps_data_ptr);
+    Eigen::Vector3d gps_enu;
+
+    imu_gps_localizer_ptr_->ProcessGpsPositionData(gps_data_ptr, &gps_enu);
+
+    gps_path_.header.frame_id = "world";
+    gps_path_.header.stamp = ros::Time::now();  
+    geometry_msgs::PoseStamped pose;
+    pose.header = gps_path_.header;
+    pose.pose.position.x = gps_enu[0];
+    pose.pose.position.y = gps_enu[1];
+    pose.pose.position.z = gps_enu[2];
+    gps_path_.poses.push_back(pose);
+    gps_pub.publish(gps_path_);
 
     LogGps(gps_data_ptr);
 }
