@@ -57,18 +57,8 @@ void LocalizationWrapper::ImuCallback(const sensor_msgs::ImuConstPtr& imu_msg_pt
                           imu_msg_ptr->angular_velocity.y,
                           imu_msg_ptr->angular_velocity.z;
     
-    ImuGpsLocalization::State fused_state;
-    const bool ok = imu_gps_localizer_ptr_->ProcessImuData(imu_data_ptr, &fused_state);
-    if (!ok) {
-        return;
-    }
-
-    // Publish fused state.
-    ConvertStateToRosTopic(fused_state);
-    state_pub_.publish(ros_path_);
-
-    // Log fused state.
-    LogState(fused_state);
+    
+    imu_gps_localizer_ptr_->ProcessImuData(imu_data_ptr);
 }
 
 void LocalizationWrapper::MagCallBack(const sensor_msgs::MagneticFieldConstPtr& mag_msg_ptr) {
@@ -80,7 +70,6 @@ void LocalizationWrapper::MagCallBack(const sensor_msgs::MagneticFieldConstPtr& 
     mag_data_ptr->cov = Eigen::Map<const Eigen::Matrix3d>(mag_msg_ptr->magnetic_field_covariance.data());
 
     imu_gps_localizer_ptr_->ProcessMagData(mag_data_ptr);
-
 
 };  // added function: to accept the mag_msg and process it
 
@@ -98,26 +87,30 @@ void LocalizationWrapper::GpsPositionCallback(const sensor_msgs::NavSatFixConstP
                          gps_msg_ptr->altitude;
     gps_data_ptr->cov = Eigen::Map<const Eigen::Matrix3d>(gps_msg_ptr->position_covariance.data());
 
+    ImuGpsLocalization::State fused_state;
     Eigen::Vector3d gps_enu;
 
-    imu_gps_localizer_ptr_->ProcessGpsPositionData(gps_data_ptr, &gps_enu);
+    const bool ok = imu_gps_localizer_ptr_->ProcessGpsPositionData(gps_data_ptr, &gps_enu, &fused_state);
+    if (!ok) {
+        return;
+    }
 
-    gps_path_.header.frame_id = "world";
-    gps_path_.header.stamp = ros::Time::now();  
-    geometry_msgs::PoseStamped pose;
-    pose.header = gps_path_.header;
-    pose.pose.position.x = gps_enu[0];
-    pose.pose.position.y = gps_enu[1];
-    pose.pose.position.z = gps_enu[2];
-    gps_path_.poses.push_back(pose);
+    // Publish the accepted Gps data
+    ConvertGps_enuToRosTopic(gps_enu);
     gps_pub.publish(gps_path_);
 
-    LogGps(gps_data_ptr);
+    // Publish fused state.
+    ConvertStateToRosTopic(fused_state);
+    state_pub_.publish(ros_path_);
+
+    // Log fused state.
+    LogState(fused_state);
+    LogGps(gps_data_ptr, gps_enu);
 }
 
 void LocalizationWrapper::LogState(const ImuGpsLocalization::State& state) {
     // const Eigen::Quaterniond G_q_I(state.G_R_I);
-    file_state_ << std::fixed << std::setprecision(16)
+    file_state_ << std::fixed << std::setprecision(15)
                 << state.timestamp << ","
                 << state.lla[0] << "," << state.lla[1] << "," << state.lla[2] << ","
                 << state.G_p_I[0] << "," << state.G_p_I[1] << "," << state.G_p_I[2] << ","
@@ -127,10 +120,25 @@ void LocalizationWrapper::LogState(const ImuGpsLocalization::State& state) {
                 << state.gyro_bias[0] << "," << state.gyro_bias[1] << "," << state.gyro_bias[2] << "\n";
 }
 
-void LocalizationWrapper::LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data) {
+void LocalizationWrapper::LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data, Eigen::Vector3d gps_enu) {
     file_gps_ << std::fixed << std::setprecision(15)
               << gps_data->timestamp << ","
-              << gps_data->lla[0] << "," << gps_data->lla[1] << "," << gps_data->lla[2] << "\n";
+              << gps_data->lla[0] << "," << gps_data->lla[1] << "," << gps_data->lla[2] << ","
+              << gps_enu[0] << "," << gps_enu[1] << "," << gps_enu[2] << "\n";
+} // changed! add the gps_enu data
+
+void LocalizationWrapper::ConvertGps_enuToRosTopic(const Eigen::Vector3d& gps_enu) {
+    gps_path_.header.frame_id = "world";
+    gps_path_.header.stamp = ros::Time::now();  
+
+    geometry_msgs::PoseStamped pose;
+    pose.header = gps_path_.header;
+
+    pose.pose.position.x = gps_enu[0];
+    pose.pose.position.y = gps_enu[1];
+    pose.pose.position.z = gps_enu[2];
+
+    gps_path_.poses.push_back(pose);
 }
 
 void LocalizationWrapper::ConvertStateToRosTopic(const ImuGpsLocalization::State& state) {

@@ -25,9 +25,11 @@ public:
 
 private:
     void LogState(const ImuGpsLocalization::State& state);
-    void LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data);
+    void LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data, Eigen::Vector3d gps_enu);
 
     void ConvertStateToRosTopic(const ImuGpsLocalization::State& state);
+
+    void ConvertGps_enuToRosTopic(const Eigen::Vector3d& gps_enu);
     
     ros::Subscriber imu_sub_;
     ros::Subscriber mag_sub_;  // added Subscriber to accept the topic /imu/mag

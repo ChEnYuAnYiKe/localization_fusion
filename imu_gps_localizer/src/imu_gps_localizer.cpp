@@ -17,7 +17,7 @@ ImuGpsLocalizer::ImuGpsLocalizer(const double acc_noise, const double gyro_noise
     gps_processor_ = std::make_unique<GpsProcessor>(I_p_Gps);
 }
 
-bool ImuGpsLocalizer::ProcessImuData(const ImuDataPtr imu_data_ptr, State* fused_state) {
+bool ImuGpsLocalizer::ProcessImuData(const ImuDataPtr imu_data_ptr) {
     if (!initialized_) {
         initializer_->AddImuData(imu_data_ptr);
         return false;
@@ -28,7 +28,7 @@ bool ImuGpsLocalizer::ProcessImuData(const ImuDataPtr imu_data_ptr, State* fused
 
     // Convert ENU state to lla.
     ConvertENUToLLA(init_lla_, state_.G_p_I, &(state_.lla));
-    *fused_state = state_;
+    
     return true;
 }
 
@@ -39,7 +39,7 @@ bool ImuGpsLocalizer::ProcessMagData(const MagDataPtr mag_data_ptr) {
     }
 };
 
-bool ImuGpsLocalizer::ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Eigen::Vector3d* gps_enu) {
+bool ImuGpsLocalizer::ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Eigen::Vector3d* gps_enu, State* fused_state) {
     if (!initialized_) {
         if (!initializer_->AddGpsPositionData(gps_data_ptr, &state_)) {
             return false;
@@ -58,6 +58,8 @@ bool ImuGpsLocalizer::ProcessGpsPositionData(const GpsPositionDataPtr gps_data_p
 
     // Update.
     gps_processor_->CorrectStateByGpsPosition(init_lla_, gps_data_ptr, &state_);
+    
+    *fused_state = state_;
 
     return true;
 }
