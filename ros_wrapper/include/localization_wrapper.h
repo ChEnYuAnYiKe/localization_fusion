@@ -29,18 +29,22 @@ private:
 
     void ConvertStateToRosTopic(const ImuGpsLocalization::State& state);
 
+    void ConvertP_StateToRosTopic(const ImuGpsLocalization::State& state);
+
     void ConvertGps_enuToRosTopic(const Eigen::Vector3d& gps_enu);
     
     ros::Subscriber imu_sub_;
     ros::Subscriber mag_sub_;  // added Subscriber to accept the topic /imu/mag
     ros::Subscriber gps_position_sub_;
     ros::Publisher state_pub_;
-    ros::Publisher gps_pub;
+    ros::Publisher imu_pub_;
+    ros::Publisher gps_pub_;
 
     std::ofstream file_state_;
     std::ofstream file_gps_;
 
     nav_msgs::Path ros_path_;
+    nav_msgs::Path imu_path_;
     nav_msgs::Path gps_path_;
 
     std::unique_ptr<ImuGpsLocalization::ImuGpsLocalizer> imu_gps_localizer_ptr_;

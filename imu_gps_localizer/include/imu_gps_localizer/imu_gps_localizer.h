@@ -15,7 +15,7 @@ public:
                     const double acc_bias_noise, const double gyro_bias_noise,
                     const Eigen::Vector3d& I_p_Gps);
 
-    bool ProcessImuData(const ImuDataPtr imu_data_ptr);
+    bool ProcessImuData(const ImuDataPtr imu_data_ptr, State* prior_state);
 
     bool ProcessMagData(const MagDataPtr mag_data_ptr); // added function: to storage mag_data and 
                                                         // cal the initial yaw of the UAV

@@ -39,7 +39,8 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
     gps_position_sub_ = nh.subscribe("/fix", 10,  &LocalizationWrapper::GpsPositionCallback, this);
 
     state_pub_ = nh.advertise<nav_msgs::Path>("fused_path", 10);
-    gps_pub = nh.advertise<nav_msgs::Path>("gps_path", 10);
+    imu_pub_ = nh.advertise<nav_msgs::Path>("imu_path", 10);  // added publisher
+    gps_pub_ = nh.advertise<nav_msgs::Path>("gps_path", 10);  // added publisher
 }
 
 LocalizationWrapper::~LocalizationWrapper() {
@@ -57,8 +58,15 @@ void LocalizationWrapper::ImuCallback(const sensor_msgs::ImuConstPtr& imu_msg_pt
                           imu_msg_ptr->angular_velocity.y,
                           imu_msg_ptr->angular_velocity.z;
     
+    ImuGpsLocalization::State prior_state;
     
-    imu_gps_localizer_ptr_->ProcessImuData(imu_data_ptr);
+    const bool okk = imu_gps_localizer_ptr_->ProcessImuData(imu_data_ptr, &prior_state);
+    if (!okk) {
+        return;
+    }
+    ConvertP_StateToRosTopic(prior_state);
+    imu_pub_.publish(imu_path_);
+
 }
 
 void LocalizationWrapper::MagCallBack(const sensor_msgs::MagneticFieldConstPtr& mag_msg_ptr) {
@@ -97,7 +105,7 @@ void LocalizationWrapper::GpsPositionCallback(const sensor_msgs::NavSatFixConstP
 
     // Publish the accepted Gps data
     ConvertGps_enuToRosTopic(gps_enu);
-    gps_pub.publish(gps_path_);
+    gps_pub_.publish(gps_path_);
 
     // Publish fused state.
     ConvertStateToRosTopic(fused_state);
@@ -139,7 +147,27 @@ void LocalizationWrapper::ConvertGps_enuToRosTopic(const Eigen::Vector3d& gps_en
     pose.pose.position.z = gps_enu[2];
 
     gps_path_.poses.push_back(pose);
-}
+}  // added function
+
+void LocalizationWrapper::ConvertP_StateToRosTopic(const ImuGpsLocalization::State& state) {
+    imu_path_.header.frame_id = "world";
+    imu_path_.header.stamp = ros::Time::now();  
+
+    geometry_msgs::PoseStamped pose;
+    pose.header = imu_path_.header;
+
+    pose.pose.position.x = state.G_p_I[0];
+    pose.pose.position.y = state.G_p_I[1];
+    pose.pose.position.z = state.G_p_I[2];
+
+    // const Eigen::Quaterniond G_q_I(state.G_R_I);
+    pose.pose.orientation.x = state.G_q.x();
+    pose.pose.orientation.y = state.G_q.y();
+    pose.pose.orientation.z = state.G_q.z();
+    pose.pose.orientation.w = state.G_q.w();
+
+    imu_path_.poses.push_back(pose);
+}  // added function
 
 void LocalizationWrapper::ConvertStateToRosTopic(const ImuGpsLocalization::State& state) {
     ros_path_.header.frame_id = "world";
