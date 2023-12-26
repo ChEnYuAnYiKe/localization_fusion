@@ -34,9 +34,10 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
                                                               I_p_Gps);
 
     // Subscribe topics.
-    imu_sub_ = nh.subscribe("/imu/data", 10,  &LocalizationWrapper::ImuCallback, this);
-    mag_sub_ = nh.subscribe("/imu/mag", 10, &LocalizationWrapper::MagCallBack, this);
-    gps_position_sub_ = nh.subscribe("/fix", 10,  &LocalizationWrapper::GpsPositionCallback, this);
+    // In mavros, the topic below are /mavros/imu/data, /mavros/imu/mag, /mavros/global_position/raw/fix
+    imu_sub_ = nh.subscribe("/mavros/imu/data", 10,  &LocalizationWrapper::ImuCallback, this);
+    mag_sub_ = nh.subscribe("/mavros/imu/mag", 10, &LocalizationWrapper::MagCallBack, this);
+    gps_position_sub_ = nh.subscribe("/mavros/global_position/raw/fix", 10,  &LocalizationWrapper::GpsPositionCallback, this);
 
     state_pub_ = nh.advertise<nav_msgs::Path>("fused_path", 10);
     imu_pub_ = nh.advertise<nav_msgs::Path>("imu_path", 10);  // added publisher
@@ -83,10 +84,12 @@ void LocalizationWrapper::MagCallBack(const sensor_msgs::MagneticFieldConstPtr& 
 
 void LocalizationWrapper::GpsPositionCallback(const sensor_msgs::NavSatFixConstPtr& gps_msg_ptr) {
     // Check the gps_status.
+    /*
     if (gps_msg_ptr->status.status != 2) {
         LOG(WARNING) << "[GpsCallBack]: Bad gps message!";
         return;
     }
+    */
 
     ImuGpsLocalization::GpsPositionDataPtr gps_data_ptr = std::make_shared<ImuGpsLocalization::GpsPositionData>();
     gps_data_ptr->timestamp = gps_msg_ptr->header.stamp.toSec();
