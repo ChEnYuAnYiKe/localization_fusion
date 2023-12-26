@@ -135,6 +135,7 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
 
     // ****************************************************************************************************
     // STEP 3: Calculate the prior state estimation error covariance matrix
+    state->state_vector = Fk * last_state.state_vector;
     state->cov = Fk * last_state.cov * Fk.transpose() + Bk * Q_ * Bk.transpose();;
 
     // ****************************************************************************************************

@@ -40,7 +40,7 @@ bool GpsProcessor::CorrectStateByGpsPosition(const Eigen::Vector3d& init_lla, co
     const Eigen::MatrixXd& P = state->cov;
     TypeMatrixC R_;
     R_.setZero();
-    R_ = Eigen::Matrix3d::Identity() * 0.0025;
+    R_ = Eigen::Matrix3d::Identity() * 0.25;
     // R_ = gps_data_ptr->cov;
     TypeMatrixK K_;
     K_ = P * G_.transpose() * (G_ * P * G_.transpose() + C_ * R_ * C_.transpose()).inverse();
@@ -61,6 +61,7 @@ bool GpsProcessor::CorrectStateByGpsPosition(const Eigen::Vector3d& init_lla, co
     Eigen::Quaterniond quat(state->state_vector.segment<4>(INDEX_STATE_ORI));
     quat.normalize();
     state->G_q = quat;
+    state->G_R_I = state->G_q.toRotationMatrix();
 
     state->acc_bias = state->state_vector.segment<3>(INDEX_STATE_ACC_BIAS);
     state->gyro_bias = state->state_vector.segment<3>(INDEX_STATE_GYRO_BIAS);

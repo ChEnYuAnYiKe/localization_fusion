@@ -78,8 +78,7 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
     state->cov.setZero();
     // position std
     // state->cov.block<3, 3>(0, 0) = 100. * Eigen::Matrix3d::Identity();
-    state->cov.block<2, 2>(0, 0) = 100. * Eigen::Matrix2d::Identity();
-    state->cov(2,2) = 36.;
+    state->cov.block<3, 3>(0, 0) = 100. * Eigen::Matrix3d::Identity();
 
     // velocity std
     state->cov.block<3, 3>(3, 3) = 100. * Eigen::Matrix3d::Identity(); 

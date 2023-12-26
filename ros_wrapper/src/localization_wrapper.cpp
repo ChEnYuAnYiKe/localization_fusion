@@ -160,15 +160,15 @@ void LocalizationWrapper::ConvertP_StateToRosTopic(const ImuGpsLocalization::Sta
     geometry_msgs::PoseStamped pose;
     pose.header = imu_path_.header;
 
-    pose.pose.position.x = state.G_p_I[0];
-    pose.pose.position.y = state.G_p_I[1];
-    pose.pose.position.z = state.G_p_I[2];
+    pose.pose.position.x = state.state_vector[0];
+    pose.pose.position.y = state.state_vector[1];
+    pose.pose.position.z = state.state_vector[2];
 
     // const Eigen::Quaterniond G_q_I(state.G_R_I);
-    pose.pose.orientation.x = state.G_q.x();
-    pose.pose.orientation.y = state.G_q.y();
-    pose.pose.orientation.z = state.G_q.z();
-    pose.pose.orientation.w = state.G_q.w();
+    pose.pose.orientation.x = state.state_vector[6];
+    pose.pose.orientation.y = state.state_vector[7];
+    pose.pose.orientation.z = state.state_vector[8];
+    pose.pose.orientation.w = state.state_vector[9];
 
     imu_path_.poses.push_back(pose);
 }  // added function
