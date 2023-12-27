@@ -130,13 +130,34 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
     Q_.block<3,3>(0,0) = Eigen::Matrix3d::Identity() * acc_noise_;
     Q_.block<3,3>(3,3) = Eigen::Matrix3d::Identity() * gyro_noise_;
 
+    TypeMatrixW W_;
+    W_.setZero();
+    W_.block<3,1>(0,0) = Eigen::Vector3d(acc_bias_noise_, acc_bias_noise_, acc_bias_noise_);
+    W_.block<3,1>(3,0) = Eigen::Vector3d(gyro_bias_noise_, gyro_bias_noise_, gyro_bias_noise_);
+
+    TypeVectorX gt_;
+    gt_.setZero();
+    gt_.block<3,1>(INDEX_STATE_VEL,0) = gravity_;
     // ****************************************************************************************************
 
 
     // ****************************************************************************************************
     // STEP 3: Calculate the prior state estimation error covariance matrix
-    state->state_vector = Fk * last_state.state_vector;
-    state->cov = Fk * last_state.cov * Fk.transpose() + Bk * Q_ * Bk.transpose();;
+    state->state_vector = Fk * last_state.state_vector + Bk * W_ + gt_ * delta_t;
+
+    // re-Update the state-vector
+    state->G_p_I = state->state_vector.segment<3>(INDEX_STATE_POSI);
+    state->G_v_I = state->state_vector.segment<3>(INDEX_STATE_VEL);
+
+    Eigen::Quaterniond quat(state->state_vector.segment<4>(INDEX_STATE_ORI));
+    quat.normalize();
+    state->G_q = quat;
+    state->G_R_I = state->G_q.toRotationMatrix();
+
+    state->acc_bias = state->state_vector.segment<3>(INDEX_STATE_ACC_BIAS);
+    state->gyro_bias = state->state_vector.segment<3>(INDEX_STATE_GYRO_BIAS);
+
+    state->cov = Fk * last_state.cov * Fk.transpose() + Bk * Q_ * Bk.transpose();
 
     // ****************************************************************************************************
 
