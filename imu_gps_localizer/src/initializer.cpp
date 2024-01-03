@@ -35,8 +35,8 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
     }
 
     const ImuDataPtr last_imu_ptr = imu_buffer_.back();
-    // TODO: need to figure out how to synchronize all sensors.
-    if (std::abs(gps_data_ptr->timestamp - last_imu_ptr->timestamp) > 0.5) {
+    
+    if (std::abs(gps_data_ptr->timestamp - last_imu_ptr->timestamp) > 0.1) {
         LOG(ERROR) << "[AddGpsPositionData]: Gps and imu timestamps are not synchronized!";
         return false;
     }

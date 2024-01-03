@@ -23,6 +23,8 @@ bool ImuGpsLocalizer::ProcessImuData(const ImuDataPtr imu_data_ptr, State* prior
         return false;
     }
     
+    imu_buffer_ekf.push_back(imu_data_ptr);
+
     // Predict.
     imu_processor_->Predict(state_.imu_data_ptr, imu_data_ptr, &state_);
 
@@ -56,6 +58,8 @@ bool ImuGpsLocalizer::ProcessGpsPositionData(const GpsPositionDataPtr gps_data_p
         return true;
     }
 
+    gps_buffer_ekf.push_back(gps_data_ptr);
+
     ConvertLLAToENU(init_lla_, gps_data_ptr->lla, gps_enu);
 
     // Update.
@@ -64,6 +68,10 @@ bool ImuGpsLocalizer::ProcessGpsPositionData(const GpsPositionDataPtr gps_data_p
     *fused_state = state_;
 
     return true;
+}
+
+void ImuGpsLocalizer::ProcessFlow() {
+
 }
 
 }  // namespace ImuGpsLocalization

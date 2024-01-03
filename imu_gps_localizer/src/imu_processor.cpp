@@ -23,30 +23,28 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
     State last_state = *state;
 
     // Obtain acc and gyro without bias.
-    const Eigen::Vector3d acc_unbias = 0.5 * (last_imu->acc + cur_imu->acc) - last_state.acc_bias;
-    const Eigen::Vector3d gyro_unbias = 0.5 * (last_imu->gyro + cur_imu->gyro) - last_state.gyro_bias;
+    const Eigen::Vector3d acc_unbias = cur_imu->acc - last_state.acc_bias;
+    const Eigen::Vector3d gyro_unbias = cur_imu->gyro - last_state.gyro_bias;
 
     // ****************************************************************************************************
     // STEP 1: Calculate the estimation of the prior state
-    state->G_p_I = last_state.G_p_I + last_state.G_v_I * delta_t + 
-                   0.5 * (last_state.G_R_I * acc_unbias + gravity_) * delta_t2;
-    state->G_v_I = last_state.G_v_I + (last_state.G_R_I * acc_unbias + gravity_) * delta_t;
+    /*state->G_p_I = last_state.G_p_I + last_state.G_v_I * delta_t + 
+                   0.5 * (last_state.G_R_I * acc_unbias) * delta_t2;
+    state->G_v_I = last_state.G_v_I + (last_state.G_R_I * acc_unbias) * delta_t;
 
-    /*
+    
     const Eigen::Vector3d delta_angle_axis = gyro_unbias * delta_t;
     if (delta_angle_axis.norm() > 1e-12) {
         state->G_R_I = last_state.G_R_I * Eigen::AngleAxisd(delta_angle_axis.norm(), delta_angle_axis.normalized()).toRotationMatrix();
     } 
-    */
+    
 
     // added: to update the quaternion
     Eigen::Quaterniond delta_q;
     const Eigen::Vector3d delta_angle = gyro_unbias * delta_t * 0.5;
-    if (delta_angle.norm() > 1e-12) {
-        delta_q.w() = cos(delta_angle.norm());
-        delta_q.vec() = sin(delta_angle.norm()) * delta_angle.normalized();
-        state->G_q = (last_state.G_q * delta_q).normalized();
-    }
+    delta_q.w() = cos(delta_angle.norm());
+    delta_q.vec() = sin(delta_angle.norm()) * delta_angle.normalized();
+    state->G_q = (last_state.G_q * delta_q).normalized();
 
     //  Combine all state vectors into a single vector
     state->state_vector << state->G_p_I, state->G_v_I, 
@@ -55,6 +53,7 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
     
     // Update the rotation matrix
     state->G_R_I = state->G_q.toRotationMatrix();
+    */
 
     // ****************************************************************************************************
 
@@ -146,7 +145,7 @@ void ImuProcessor::Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, 
     // state->state_vector = Fk * last_state.state_vector + Bk * W_ + gt_ * delta_t;
     state->state_vector = Fk * last_state.state_vector;
 
-    // re-Update the state-vector
+    // Update the state-vector
     state->G_p_I = state->state_vector.segment<3>(INDEX_STATE_POSI);
     state->G_v_I = state->state_vector.segment<3>(INDEX_STATE_VEL);
 

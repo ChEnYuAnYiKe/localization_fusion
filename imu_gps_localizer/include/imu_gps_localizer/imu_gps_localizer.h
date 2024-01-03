@@ -22,6 +22,7 @@ public:
 
     bool ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Eigen::Vector3d* gps_enu, State* fused_state);
 
+    void ProcessFlow();
 private:
     std::unique_ptr<Initializer>  initializer_;
     std::unique_ptr<ImuProcessor> imu_processor_;
@@ -30,6 +31,9 @@ private:
     bool initialized_;
     Eigen::Vector3d init_lla_; // The initial reference gps point.
     State state_;  // The state staged on
+
+    std::deque<ImuDataPtr> imu_buffer_ekf;
+    std::deque<GpsPositionDataPtr> gps_buffer_ekf;
 };
 
 }  // namespace ImuGpsLocalization

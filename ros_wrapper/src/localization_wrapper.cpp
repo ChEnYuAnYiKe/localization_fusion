@@ -35,9 +35,9 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
 
     // Subscribe topics.
     // In mavros, the topic below are /mavros/imu/data, /mavros/imu/mag, /mavros/global_position/raw/fix
-    imu_sub_ = nh.subscribe("/mavros/imu/data", 10,  &LocalizationWrapper::ImuCallback, this);
-    mag_sub_ = nh.subscribe("/mavros/imu/mag", 10, &LocalizationWrapper::MagCallBack, this);
-    gps_position_sub_ = nh.subscribe("/mavros/global_position/raw/fix", 10,  &LocalizationWrapper::GpsPositionCallback, this);
+    imu_sub_ = nh.subscribe("/imu/data", 10,  &LocalizationWrapper::ImuCallback, this);
+    mag_sub_ = nh.subscribe("/imu/mag", 10, &LocalizationWrapper::MagCallBack, this);
+    gps_position_sub_ = nh.subscribe("/fix", 10,  &LocalizationWrapper::GpsPositionCallback, this);
 
     state_pub_ = nh.advertise<nav_msgs::Path>("fused_path", 10);
     imu_pub_ = nh.advertise<nav_msgs::Path>("imu_path", 10);  // added publisher
@@ -123,7 +123,6 @@ void LocalizationWrapper::LogState(const ImuGpsLocalization::State& state) {
     // const Eigen::Quaterniond G_q_I(state.G_R_I);
     file_state_ << std::fixed << std::setprecision(15)
                 << state.timestamp << ","
-                << state.lla[0] << "," << state.lla[1] << "," << state.lla[2] << ","
                 << state.G_p_I[0] << "," << state.G_p_I[1] << "," << state.G_p_I[2] << ","
                 << state.G_v_I[0] << "," << state.G_v_I[1] << "," << state.G_v_I[2] << ","
                 << state.G_q.x() << "," << state.G_q.y() << "," << state.G_q.z() << "," << state.G_q.w() << ","
