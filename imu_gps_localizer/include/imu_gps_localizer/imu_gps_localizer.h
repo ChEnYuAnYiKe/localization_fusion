@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <queue>
 
 #include "imu_gps_localizer/base_type.h"
 #include "imu_gps_localizer/gps_processor.h"
@@ -15,14 +16,14 @@ public:
                     const double acc_bias_noise, const double gyro_bias_noise,
                     const Eigen::Vector3d& I_p_Gps);
 
-    bool ProcessImuData(const ImuDataPtr imu_data_ptr, State* prior_state);
+    bool ProcessImuData(const ImuDataPtr imu_data_ptr);
 
     bool ProcessMagData(const MagDataPtr mag_data_ptr); // added function: to storage mag_data and 
                                                         // cal the initial yaw of the UAV
 
-    bool ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Eigen::Vector3d* gps_enu, State* fused_state);
+    bool ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Eigen::Vector3d* gps_enu);
 
-    void ProcessFlow();
+    bool ProcessFlow(std::queue<ImuGpsLocalization::State>* fused_state);
 private:
     std::unique_ptr<Initializer>  initializer_;
     std::unique_ptr<ImuProcessor> imu_processor_;

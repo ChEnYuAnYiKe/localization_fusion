@@ -51,6 +51,8 @@ bool GpsProcessor::CorrectStateByGpsPosition(const Eigen::Vector3d& init_lla, co
     // STEP 6: Calculate the estimation of the posterior state 
     Eigen::Vector3d G_p_Gps;
     ConvertLLAToENU(init_lla, gps_data_ptr->lla, &G_p_Gps);  // Convert wgs84 to ENU frame.
+    
+    state->lla = gps_data_ptr->lla;
 
     state->state_vector = state->state_vector + K_ * (G_p_Gps - G_ * state->state_vector);
 
@@ -73,6 +75,7 @@ bool GpsProcessor::CorrectStateByGpsPosition(const Eigen::Vector3d& init_lla, co
     state->cov = (TypeMatrixP::Identity() - K_ * G_) * P * (TypeMatrixP::Identity() - K_ * G_).transpose()
                     + K_ * C_ * K_.transpose();
 
+    state->timestamp = gps_data_ptr->timestamp;
     // ****************************************************************************************************
 
 }  // added function: to correct the state-vector by using the gps data in the way of EKF

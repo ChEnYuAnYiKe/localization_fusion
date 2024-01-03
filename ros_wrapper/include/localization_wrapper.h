@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <memory>
+#include <queue>
 
 #include <geometry_msgs/TwistStamped.h>
 #include <nav_msgs/Path.h>
@@ -23,6 +24,8 @@ public:
 
     void GpsPositionCallback(const sensor_msgs::NavSatFixConstPtr& gps_msg_ptr);
 
+    void ProcessCallback(const ros::TimerEvent& e);
+
 private:
     void LogState(const ImuGpsLocalization::State& state);
     void LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data, Eigen::Vector3d gps_enu);
@@ -39,6 +42,8 @@ private:
     ros::Publisher state_pub_;
     ros::Publisher imu_pub_;
     ros::Publisher gps_pub_;
+
+    ros::Timer process_flow;
 
     std::ofstream file_state_;
     std::ofstream file_gps_;

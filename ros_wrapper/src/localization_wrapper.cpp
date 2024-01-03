@@ -1,6 +1,7 @@
 #include "localization_wrapper.h"
 
 #include <iomanip>
+#include <iostream>
 
 #include <glog/logging.h>
 
@@ -10,7 +11,7 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
     // Load configs.
     double acc_noise, gyro_noise, acc_bias_noise, gyro_bias_noise;
     nh.param("acc_noise",       acc_noise, 1e-2);
-    nh.param("gyro_noise",      gyro_noise, 1e-4);
+    nh.param("gyro_noise",      gyro_noise, 1e-2);
     nh.param("acc_bias_noise",  acc_bias_noise, 1e-6);
     nh.param("gyro_bias_noise", gyro_bias_noise, 1e-8);
 
@@ -39,9 +40,11 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
     mag_sub_ = nh.subscribe("/imu/mag", 10, &LocalizationWrapper::MagCallBack, this);
     gps_position_sub_ = nh.subscribe("/fix", 10,  &LocalizationWrapper::GpsPositionCallback, this);
 
+    process_flow = nh.createTimer(ros::Duration(0.01), &LocalizationWrapper::ProcessCallback, this);
+
     state_pub_ = nh.advertise<nav_msgs::Path>("fused_path", 10);
-    imu_pub_ = nh.advertise<nav_msgs::Path>("imu_path", 10);  // added publisher
-    gps_pub_ = nh.advertise<nav_msgs::Path>("gps_path", 10);  // added publisher
+    // imu_pub_ = nh.advertise<nav_msgs::Path>("imu_path", 10);  
+    gps_pub_ = nh.advertise<nav_msgs::Path>("gps_path", 10);  
 }
 
 LocalizationWrapper::~LocalizationWrapper() {
@@ -50,6 +53,7 @@ LocalizationWrapper::~LocalizationWrapper() {
 }
 
 void LocalizationWrapper::ImuCallback(const sensor_msgs::ImuConstPtr& imu_msg_ptr) {
+    // LOG(INFO) << "[imu]: ok!";
     ImuGpsLocalization::ImuDataPtr imu_data_ptr = std::make_shared<ImuGpsLocalization::ImuData>();
     imu_data_ptr->timestamp = imu_msg_ptr->header.stamp.toSec();
     imu_data_ptr->acc << imu_msg_ptr->linear_acceleration.x, 
@@ -59,14 +63,7 @@ void LocalizationWrapper::ImuCallback(const sensor_msgs::ImuConstPtr& imu_msg_pt
                           imu_msg_ptr->angular_velocity.y,
                           imu_msg_ptr->angular_velocity.z;
     
-    ImuGpsLocalization::State prior_state;
-    
-    const bool okk = imu_gps_localizer_ptr_->ProcessImuData(imu_data_ptr, &prior_state);
-    if (!okk) {
-        return;
-    }
-    ConvertP_StateToRosTopic(prior_state);
-    imu_pub_.publish(imu_path_);
+    imu_gps_localizer_ptr_->ProcessImuData(imu_data_ptr);
 
 }
 
@@ -98,25 +95,29 @@ void LocalizationWrapper::GpsPositionCallback(const sensor_msgs::NavSatFixConstP
                          gps_msg_ptr->altitude;
     gps_data_ptr->cov = Eigen::Map<const Eigen::Matrix3d>(gps_msg_ptr->position_covariance.data());
 
-    ImuGpsLocalization::State fused_state;
     Eigen::Vector3d gps_enu;
+    imu_gps_localizer_ptr_->ProcessGpsPositionData(gps_data_ptr, &gps_enu);
 
-    const bool ok = imu_gps_localizer_ptr_->ProcessGpsPositionData(gps_data_ptr, &gps_enu, &fused_state);
-    if (!ok) {
-        return;
-    }
-
-    // Publish the accepted Gps data
     ConvertGps_enuToRosTopic(gps_enu);
     gps_pub_.publish(gps_path_);
 
-    // Publish fused state.
-    ConvertStateToRosTopic(fused_state);
-    state_pub_.publish(ros_path_);
-
-    // Log fused state.
-    LogState(fused_state);
     LogGps(gps_data_ptr, gps_enu);
+}
+
+void LocalizationWrapper::ProcessCallback(const ros::TimerEvent& e) {
+
+    std::queue<ImuGpsLocalization::State> fused_state;
+    imu_gps_localizer_ptr_->ProcessFlow(&fused_state);
+    
+    while (!fused_state.empty())
+    {   
+        ConvertStateToRosTopic(fused_state.front());
+        state_pub_.publish(ros_path_);
+        
+        LogState(fused_state.front());
+
+        fused_state.pop();
+    }
 }
 
 void LocalizationWrapper::LogState(const ImuGpsLocalization::State& state) {
@@ -127,8 +128,7 @@ void LocalizationWrapper::LogState(const ImuGpsLocalization::State& state) {
                 << state.G_v_I[0] << "," << state.G_v_I[1] << "," << state.G_v_I[2] << ","
                 << state.G_q.x() << "," << state.G_q.y() << "," << state.G_q.z() << "," << state.G_q.w() << ","
                 << state.acc_bias[0] << "," << state.acc_bias[1] << "," << state.acc_bias[2] << ","
-                << state.gyro_bias[0] << "," << state.gyro_bias[1] << "," << state.gyro_bias[2] << ","
-                << state.cov(0,0) << "," << state.cov(1,1) << "," << state.cov(2,2) << "\n";
+                << state.gyro_bias[0] << "," << state.gyro_bias[1] << "," << state.gyro_bias[2] << "\n";
 }
 
 void LocalizationWrapper::LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data, Eigen::Vector3d gps_enu) {

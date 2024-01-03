@@ -35,7 +35,7 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
     }
 
     const ImuDataPtr last_imu_ptr = imu_buffer_.back();
-    
+
     if (std::abs(gps_data_ptr->timestamp - last_imu_ptr->timestamp) > 0.1) {
         LOG(ERROR) << "[AddGpsPositionData]: Gps and imu timestamps are not synchronized!";
         return false;
@@ -95,11 +95,11 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
     */
 
     // Set quaternion 
-    state->cov.block<4, 4>(6, 6) = 0.0025 * Eigen::Matrix4d::Identity();
+    state->cov.block<4, 4>(6, 6) = 0.25 * Eigen::Matrix4d::Identity();
     // Acc bias.
-    state->cov.block<3, 3>(10, 10) = 0.01 * Eigen::Matrix3d::Identity();
+    state->cov.block<3, 3>(10, 10) = 1. * Eigen::Matrix3d::Identity();
     // Gyro bias.
-    state->cov.block<3, 3>(13, 13) = 0.01 * Eigen::Matrix3d::Identity();
+    state->cov.block<3, 3>(13, 13) = 1. * Eigen::Matrix3d::Identity();
    
     return true;
 }
