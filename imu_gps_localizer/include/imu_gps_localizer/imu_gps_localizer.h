@@ -24,6 +24,9 @@ public:
     bool ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Eigen::Vector3d* gps_enu);
 
     bool ProcessFlow(std::queue<ImuGpsLocalization::State>* fused_state);
+
+    bool ProcessFlowWithoutGps(std::queue<ImuGpsLocalization::State>* fused_state);
+    
 private:
     std::unique_ptr<Initializer>  initializer_;
     std::unique_ptr<ImuProcessor> imu_processor_;

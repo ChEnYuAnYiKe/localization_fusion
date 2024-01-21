@@ -15,7 +15,7 @@ ImuGpsLocalizer::ImuGpsLocalizer(const double acc_noise, const double gyro_noise
     initializer_ = std::make_unique<Initializer>(I_p_Gps);
     imu_processor_ = std::make_unique<ImuProcessor>(acc_noise, gyro_noise, 
                                                     acc_bias_noise, gyro_bias_noise,
-                                                    Eigen::Vector3d(0., 0., -9.81007));
+                                                    Eigen::Vector3d(0., 0., -9.80665));
     gps_processor_ = std::make_unique<GpsProcessor>(I_p_Gps);
 }
 
@@ -63,9 +63,6 @@ bool ImuGpsLocalizer::ProcessGpsPositionData(const GpsPositionDataPtr gps_data_p
 
     ConvertLLAToENU(init_lla_, gps_data_ptr->lla, gps_enu);
 
-    // Update.
-    // gps_processor_->CorrectStateByGpsPosition(init_lla_, gps_data_ptr, &state_);
-
     return true;
 }
 
@@ -82,16 +79,30 @@ bool ImuGpsLocalizer::ProcessFlow(std::queue<State>* fused_state) {
             imu_processor_->Predict(state_.imu_data_ptr, curr_imu_data_, &state_); // IMU预测
             ConvertENUToLLA(init_lla_, state_.G_p_I, &(state_.lla));
             imu_buffer_ekf.pop_front();
-            LOG(INFO) << "[ProcessFlow]: processing imu_data!";
+            // LOG(INFO) << "[ProcessFlow]: processing imu_data!";
      
         } else{ // IMU数据时间比GPS晚一点
             gps_processor_->CorrectStateByGpsPosition(init_lla_, curr_gps_data_, &state_); // GPS数据观测
             gps_buffer_ekf.pop_front();
-            LOG(INFO) << "[ProcessFlow]: processing gps_data!";
+            fused_state->push(state_);
+            // LOG(INFO) << "[ProcessFlow]: processing gps_data!";
         }
-        fused_state->push(state_);
     } 
-    std::cout << fused_state->size() << std::endl;
+    // std::cout << fused_state->size() << std::endl;
+    return true;
+}
+
+bool ImuGpsLocalizer::ProcessFlowWithoutGps(std::queue<ImuGpsLocalization::State>* fused_state) {
+    while (!imu_buffer_ekf.empty()) {
+        ImuDataPtr curr_imu_data_;
+        curr_imu_data_ = imu_buffer_ekf.front();
+
+        imu_processor_->PredictWithoutGps(state_.imu_data_ptr, curr_imu_data_, &state_); // IMU预测
+        ConvertENUToLLA(init_lla_, state_.G_p_I, &(state_.lla));
+        imu_buffer_ekf.pop_front();
+        fused_state->push(state_);
+    }
+    while (!gps_buffer_ekf.empty()) gps_buffer_ekf.pop_front();
     return true;
 }
 

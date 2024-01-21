@@ -1,0 +1,34 @@
+<launch>
+
+    <node name="nmea_topic_driver" pkg="nmea_navsat_driver" type="nmea_topic_driver" output="screen" />
+
+    <node pkg="tf" type="static_transform_publisher"
+                    name="imu_transform"
+                    args="0 0 0 0 0 0 base_link base_imu 100"/>
+
+    <!-- Navsat transform node -->
+    <node pkg="robot_localization" type="navsat_transform_node" name="navsat_transform" respawn="true">
+        <param name="magnetic_declination_radians" value="0"/>
+        <param name="yaw_offset" value="0"/>
+        <param name="zero_altitude" value="false"/>
+        <param name="broadcast_cartesian_transform" value="true"/>
+        <param name="publish_filtered_gps" value="true"/>
+        <param name="use_odometry_yaw"  value="false"/>
+        
+        <remap from="/imu/data" to="/imu/data"/>
+        <remap from="/gps/fix" to="/fix"/>
+    </node>
+
+    <!-- Ekf localization node -->
+    <node pkg="robot_localization" type="ekf_localization_node" name="ekf_map" >
+        <rosparam command="load" file="$(find imu_gps_localization)/ros_wrapper/config/ekf_navsat.yaml" />
+    </node>
+
+    <!-- Trajectory marker -->
+    <node pkg="imu_gps_localization" name="trajectory_marker" type="trajectory_marker.py" output="screen"/>
+
+    <!--node pkg="rviz" type="rviz" name="rviz" output="screen" 
+      args="-d $(find imu_gps_localization)/ros_wrapper/rviz/default_gps.rviz" required="true">
+    </node-->
+
+</launch>

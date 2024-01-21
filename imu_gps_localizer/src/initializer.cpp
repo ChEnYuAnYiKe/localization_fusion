@@ -78,7 +78,7 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
     state->cov.setZero();
     // position std
     // state->cov.block<3, 3>(0, 0) = 100. * Eigen::Matrix3d::Identity();
-    state->cov.block<3, 3>(0, 0) = 100. * Eigen::Matrix3d::Identity();
+    state->cov.block<3, 3>(0, 0) = 400. * Eigen::Matrix3d::Identity();
 
     // velocity std
     state->cov.block<3, 3>(3, 3) = 100. * Eigen::Matrix3d::Identity(); 
@@ -139,10 +139,14 @@ bool Initializer::ComputeQuaternionFromImu(Eigen::Quaterniond* G_q) {
                                   + mean_mag.z() * sin(theta_roll) * cos(phi_pitch)) );
 
     // transfer r/p/y to quaternion
+    Eigen::Quaterniond q;
     Eigen::AngleAxisd rollAngle(theta_roll, Eigen::Vector3d::UnitX());
     Eigen::AngleAxisd pitchAngle(phi_pitch, Eigen::Vector3d::UnitY());
     Eigen::AngleAxisd yawAngle(psi_yaw, Eigen::Vector3d::UnitZ());
-    *G_q = yawAngle * pitchAngle * rollAngle;
+    q = yawAngle * pitchAngle * rollAngle;
+    q.normalize();
+
+    *G_q = q;
 
     return true;
 

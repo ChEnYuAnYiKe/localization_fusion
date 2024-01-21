@@ -139,7 +139,7 @@ void LocalizationWrapper::LogGps(const ImuGpsLocalization::GpsPositionDataPtr gp
 } // changed! add the gps_enu data
 
 void LocalizationWrapper::ConvertGps_enuToRosTopic(const Eigen::Vector3d& gps_enu) {
-    gps_path_.header.frame_id = "world";
+    gps_path_.header.frame_id = "global";
     gps_path_.header.stamp = ros::Time::now();  
 
     geometry_msgs::PoseStamped pose;
@@ -153,7 +153,7 @@ void LocalizationWrapper::ConvertGps_enuToRosTopic(const Eigen::Vector3d& gps_en
 }  // added function
 
 void LocalizationWrapper::ConvertP_StateToRosTopic(const ImuGpsLocalization::State& state) {
-    imu_path_.header.frame_id = "world";
+    imu_path_.header.frame_id = "global";
     imu_path_.header.stamp = ros::Time::now();  
 
     geometry_msgs::PoseStamped pose;
@@ -173,7 +173,7 @@ void LocalizationWrapper::ConvertP_StateToRosTopic(const ImuGpsLocalization::Sta
 }  // added function
 
 void LocalizationWrapper::ConvertStateToRosTopic(const ImuGpsLocalization::State& state) {
-    ros_path_.header.frame_id = "world";
+    ros_path_.header.frame_id = "global";
     ros_path_.header.stamp = ros::Time::now();  
 
     geometry_msgs::PoseStamped pose;

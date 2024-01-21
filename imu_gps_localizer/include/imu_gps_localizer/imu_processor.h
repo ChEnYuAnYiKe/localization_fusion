@@ -11,6 +11,7 @@ public:
                  const Eigen::Vector3d& gravity);
 
     void Predict(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, State* state);
+    void PredictWithoutGps(const ImuDataPtr last_imu, const ImuDataPtr cur_imu, State* state);
 
 private:
     const double acc_noise_;
