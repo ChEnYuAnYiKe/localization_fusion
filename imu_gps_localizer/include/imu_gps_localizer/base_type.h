@@ -32,7 +32,7 @@ struct State {
     Eigen::Vector3d gyro_bias; // The bias of the gyroscope sensor.
 
     // Covariance.
-    Eigen::Matrix<double, 15, 15> cov;
+    Eigen::Matrix<double, 16, 16> cov;
 
     // The imu data.
     ImuDataPtr imu_data_ptr; 

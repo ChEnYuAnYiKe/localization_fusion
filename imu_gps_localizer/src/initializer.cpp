@@ -57,14 +57,12 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
     state->cov.setZero();
     state->cov.block<3, 3>(0, 0) = 100. * Eigen::Matrix3d::Identity(); // position std: 10 m
     state->cov.block<3, 3>(3, 3) = 100. * Eigen::Matrix3d::Identity(); // velocity std: 10 m/s
-    // roll pitch std 10 degree.
-    state->cov.block<2, 2>(6, 6) = 10. * kDegreeToRadian * 10. * kDegreeToRadian * Eigen::Matrix2d::Identity();
-    // yaw std: 100 degree.
-    state->cov(8, 8)             = 100. * kDegreeToRadian * 100. * kDegreeToRadian; 
+    // Quaternion.
+    state->cov.block<4, 4>(6, 6) = 0.5 * kDegreeToRadian * 0.5 * kDegreeToRadian * Eigen::Matrix4d::Identity();
     // Acc bias.
-    state->cov.block<3, 3>(9, 9) = 0.0025 * Eigen::Matrix3d::Identity();
+    state->cov.block<3, 3>(10, 10) = 0.01 * Eigen::Matrix3d::Identity();
     // Gyro bias.
-    state->cov.block<3, 3>(12, 12) = 0.0025 * Eigen::Matrix3d::Identity();
+    state->cov.block<3, 3>(13, 13) = 0.01 * Eigen::Matrix3d::Identity();
 
     return true;
 }

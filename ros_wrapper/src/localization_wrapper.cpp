@@ -12,7 +12,7 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
     nh.param("acc_noise",       acc_noise, 1e-2);
     nh.param("gyro_noise",      gyro_noise, 1e-4);
     nh.param("acc_bias_noise",  acc_bias_noise, 1e-6);
-    nh.param("gyro_bias_noise", gyro_bias_noise, 1e-8);
+    nh.param("gyro_bias_noise", gyro_bias_noise, 1e-6);
 
     double x, y, z;
     nh.param("I_p_Gps_x", x, 0.);
