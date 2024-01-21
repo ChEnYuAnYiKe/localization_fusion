@@ -17,7 +17,7 @@ public:
 
     bool ProcessImuData(const ImuDataPtr imu_data_ptr, State* fused_state);
 
-    bool ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr);
+    bool ProcessGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Eigen::Vector3d* gps_enu);
 
 private:
     std::unique_ptr<Initializer>  initializer_;

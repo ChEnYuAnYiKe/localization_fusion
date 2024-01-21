@@ -25,7 +25,6 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
     }
 
     const ImuDataPtr last_imu_ptr = imu_buffer_.back();
-    // TODO: synchronize all sensors.
     if (std::abs(gps_data_ptr->timestamp - last_imu_ptr->timestamp) > 0.5) {
         LOG(ERROR) << "[AddGpsPositionData]: Gps and imu timestamps are not synchronized!";
         return false;
@@ -60,11 +59,12 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
     state->cov.block<3, 3>(3, 3) = 100. * Eigen::Matrix3d::Identity(); // velocity std: 10 m/s
     // roll pitch std 10 degree.
     state->cov.block<2, 2>(6, 6) = 10. * kDegreeToRadian * 10. * kDegreeToRadian * Eigen::Matrix2d::Identity();
-    state->cov(8, 8)             = 100. * kDegreeToRadian * 100. * kDegreeToRadian; // yaw std: 100 degree.
+    // yaw std: 100 degree.
+    state->cov(8, 8)             = 100. * kDegreeToRadian * 100. * kDegreeToRadian; 
     // Acc bias.
-    state->cov.block<3, 3>(9, 9) = 0.0004 * Eigen::Matrix3d::Identity();
+    state->cov.block<3, 3>(9, 9) = 0.0025 * Eigen::Matrix3d::Identity();
     // Gyro bias.
-    state->cov.block<3, 3>(12, 12) = 0.0004 * Eigen::Matrix3d::Identity();
+    state->cov.block<3, 3>(12, 12) = 0.0025 * Eigen::Matrix3d::Identity();
 
     return true;
 }

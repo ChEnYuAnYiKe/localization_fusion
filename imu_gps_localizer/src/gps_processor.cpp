@@ -17,7 +17,7 @@ bool GpsProcessor::UpdateStateByGpsPosition(const Eigen::Vector3d& init_lla, con
     const Eigen::MatrixXd K = P * H.transpose() * (H * P * H.transpose() + V).inverse();
     const Eigen::VectorXd delta_x = K * residual;
 
-    // Add delta_x to state.
+    // Update state.
     AddDeltaToState(delta_x, state);
 
     // Covarance.

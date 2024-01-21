@@ -22,18 +22,22 @@ public:
 
 private:
     void LogState(const ImuGpsLocalization::State& state);
-    void LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data);
+    void LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data, Eigen::Vector3d gps_enu);
 
     void ConvertStateToRosTopic(const ImuGpsLocalization::State& state);
+
+    void ConvertGps_enuToRosTopic(const Eigen::Vector3d& gps_enu);
     
     ros::Subscriber imu_sub_;
     ros::Subscriber gps_position_sub_;
     ros::Publisher state_pub_;
+    ros::Publisher gps_pub_;
 
     std::ofstream file_state_;
     std::ofstream file_gps_;
 
     nav_msgs::Path ros_path_;
+    nav_msgs::Path gps_path_;
 
     std::unique_ptr<ImuGpsLocalization::ImuGpsLocalizer> imu_gps_localizer_ptr_;
 };
