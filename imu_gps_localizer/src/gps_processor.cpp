@@ -10,8 +10,8 @@ bool GpsProcessor::UpdateStateByGpsPosition(const Eigen::Vector3d& init_lla, con
     Eigen::Matrix<double, 3, 16> H;
     Eigen::Vector3d residual;
     ComputeJacobianAndResidual(init_lla, gps_data_ptr, *state, &H, &residual);
-    const Eigen::Matrix3d& V = gps_data_ptr->cov;
-    // const Eigen::Matrix3d V = Eigen::Matrix3d::Identity() * 0.25;
+    // const Eigen::Matrix3d& V = gps_data_ptr->cov;
+    const Eigen::Matrix3d V = Eigen::Matrix3d::Identity() * 0.09;
 
     // EKF.
     const Eigen::MatrixXd& P = state->cov; // 16*16
@@ -31,8 +31,8 @@ void GpsProcessor::ComputeJacobianAndResidual(const Eigen::Vector3d& init_lla,
                                               const State& state,
                                               Eigen::Matrix<double, 3, 16>* jacobian,
                                               Eigen::Vector3d* residual) {
-    const Eigen::Vector3d& G_p_I   = state.G_p_I;
-    const Eigen::Matrix3d& G_R_I   = state.G_R_I;
+    const Eigen::Vector3d& G_p_I = state.G_p_I;
+    const Eigen::Matrix3d& G_R_I = state.G_R_I;
 
     // Convert wgs84 to ENU frame.
     Eigen::Vector3d G_p_Gps;
@@ -44,7 +44,6 @@ void GpsProcessor::ComputeJacobianAndResidual(const Eigen::Vector3d& init_lla,
     // Compute jacobian.
     jacobian->setZero();
     jacobian->block<3, 3>(0, 0)  = Eigen::Matrix3d::Identity();
-
 }
 
 void AddDeltaToState(const Eigen::Matrix<double, 16, 1>& delta_x, State* state) {
@@ -60,7 +59,6 @@ void AddDeltaToState(const Eigen::Matrix<double, 16, 1>& delta_x, State* state) 
     q.z() = delta_x(9, 0);
     q.normalize();
 
-    // 修改旋转矩阵
     state->G_R_I = q.toRotationMatrix();
 }
 
