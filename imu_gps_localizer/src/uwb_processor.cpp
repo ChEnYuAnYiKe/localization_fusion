@@ -1,18 +1,18 @@
-#include "imu_gps_localizer/gps_processor.h"
+#include "imu_gps_localizer/uwb_processor.h"
 
 #include "imu_gps_localizer/utils.h"
 
 namespace ImuGpsLocalization {
 
-GpsProcessor::GpsProcessor(const Eigen::Vector3d& I_p_Gps) : I_p_Gps_(I_p_Gps) { }
+UwbProcessor::UwbProcessor(const Eigen::Vector3d& I_p_Uwb) : I_p_Uwb_(I_p_Uwb) { }
 
-void GpsProcessor::UpdateStateByGpsPosition(const Eigen::Vector3d& init_lla, const GpsPositionDataPtr gps_data_ptr, State* state) {
+void UwbProcessor::UpdateStateByUwbPosition(const Eigen::Vector3d& init_uwb, const UwbDataPtr uwb_data_ptr, State* state) {
     Eigen::Matrix<double, 3, 15> H;
     Eigen::Vector3d residual;
-    ComputeJacobianAndResidual(init_lla, gps_data_ptr, *state, &H, &residual);
-    const Eigen::Matrix3d& V = gps_data_ptr->cov;
-
-    // EKF.
+    ComputeJacobianAndResidual(init_uwb, uwb_data_ptr, *state, &H, &residual);
+    // EKF.    
+    Eigen::Vector3d v(0.0002, 0.00025, 0.01);
+    const Eigen::Matrix3d& V = v.asDiagonal();
     const Eigen::MatrixXd& P = state->cov;
     const Eigen::MatrixXd K = P * H.transpose() * (H * P * H.transpose() + V).inverse();
     const Eigen::VectorXd delta_x = K * residual;
@@ -25,28 +25,25 @@ void GpsProcessor::UpdateStateByGpsPosition(const Eigen::Vector3d& init_lla, con
     state->cov = I_KH * P * I_KH.transpose() + K * V * K.transpose();
 }
 
-void GpsProcessor::ComputeJacobianAndResidual(const Eigen::Vector3d& init_lla,  
-                                              const GpsPositionDataPtr gps_data, 
+void UwbProcessor::ComputeJacobianAndResidual(const Eigen::Vector3d& init_uwb,  
+                                              const UwbDataPtr uwb_data, 
                                               const State& state,
                                               Eigen::Matrix<double, 3, 15>* jacobian,
                                               Eigen::Vector3d* residual) {
-    const Eigen::Vector3d& G_p_I   = state.G_p_I;
-    const Eigen::Matrix3d& G_R_I   = state.G_R_I;
+    const Eigen::Vector3d& G_p_I  = state.G_p_I;
+    const Eigen::Matrix3d& G_R_I  = state.G_R_I;
 
-    // Convert wgs84 to ENU frame.
-    Eigen::Vector3d G_p_Gps;
-    ConvertLLAToENU(init_lla, gps_data->lla, &G_p_Gps);
-
+    const Eigen::Vector3d I_p_Uwb = uwb_data->location;
     // Compute residual.
-    *residual = G_p_Gps - (G_p_I + G_R_I * I_p_Gps_);
+    *residual = I_p_Uwb - (G_p_I + G_R_I * I_p_Uwb_);
 
     // Compute jacobian.
     jacobian->setZero();
     jacobian->block<3, 3>(0, 0)  = Eigen::Matrix3d::Identity();
-    jacobian->block<3, 3>(0, 6)  = - G_R_I * GetSkewMatrix(I_p_Gps_);
+    jacobian->block<3, 3>(0, 6)  = - G_R_I * GetSkewMatrix(I_p_Uwb_);
 }
 
-void GpsProcessor::AddDeltaToState(const Eigen::Matrix<double, 15, 1>& delta_x, State* state) {
+void UwbProcessor::AddDeltaToState(const Eigen::Matrix<double, 15, 1>& delta_x, State* state) {
     state->G_p_I     += delta_x.block<3, 1>(0, 0);
     state->G_v_I     += delta_x.block<3, 1>(3, 0);
     state->acc_bias  += delta_x.block<3, 1>(9, 0);
@@ -56,5 +53,6 @@ void GpsProcessor::AddDeltaToState(const Eigen::Matrix<double, 15, 1>& delta_x, 
         state->G_R_I *= Eigen::AngleAxisd(delta_x.block<3, 1>(6, 0).norm(), delta_x.block<3, 1>(6, 0).normalized()).toRotationMatrix();
     }
 }
+
 
 }  // namespace ImuGpsLocalization

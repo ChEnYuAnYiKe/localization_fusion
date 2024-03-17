@@ -8,6 +8,10 @@
     <param name="I_p_Gps_y"       type="double" value="0.0" />
     <param name="I_p_Gps_z"       type="double" value="0.0" />
 
+    <param name="I_p_Uwb_x"       type="double" value="0.0" />
+    <param name="I_p_Uwb_y"       type="double" value="0.0" />
+    <param name="I_p_Uwb_z"       type="double" value="0.0" />
+
     <param name="log_folder"      type="string" value="$(find imu_gps_localization)" />
 
     <node name="nmea_topic_driver" pkg="nmea_navsat_driver" type="nmea_topic_driver" output="screen" />

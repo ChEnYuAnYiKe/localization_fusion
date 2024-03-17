@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <Eigen/Core>
+#include <Eigen/Dense>
 
 namespace ImuGpsLocalization {
 
@@ -21,6 +21,13 @@ struct GpsPositionData {
 };
 using GpsPositionDataPtr = std::shared_ptr<GpsPositionData>;
 
+struct UwbData {
+    double timestamp;     // In second.
+
+    Eigen::Vector3d location; //在UWB坐标系下的坐标
+};
+using UwbDataPtr = std::shared_ptr<UwbData>;
+
 struct State {
     double timestamp;
     
@@ -30,7 +37,6 @@ struct State {
     Eigen::Matrix3d G_R_I;     // The rotation from the IMU frame to the Global frame.
     Eigen::Vector3d acc_bias;  // The bias of the acceleration sensor.
     Eigen::Vector3d gyro_bias; // The bias of the gyroscope sensor.
-
     // Covariance.
     Eigen::Matrix<double, 15, 15> cov;
 

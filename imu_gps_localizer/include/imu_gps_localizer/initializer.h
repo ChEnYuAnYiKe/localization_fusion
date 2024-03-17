@@ -17,6 +17,8 @@ public:
 
     bool AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, State* state);
 
+    bool AddUwbData(const UwbDataPtr uwb_data_ptr, State* state);
+
 private:
     bool ComputeG_R_IFromImuData(Eigen::Matrix3d* G_R_I);
 

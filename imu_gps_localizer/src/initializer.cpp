@@ -69,6 +69,60 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
     return true;
 }
 
+bool Initializer::AddUwbData(const UwbDataPtr uwb_data_ptr, State* state) {
+    if (imu_buffer_.size() < kImuDataBufferLength) {
+        LOG(WARNING) << "[AddUwbData]: No enought imu data!";
+        return false;
+    }
+
+    const ImuDataPtr last_imu_ptr = imu_buffer_.back();
+    if (std::abs(uwb_data_ptr->timestamp - last_imu_ptr->timestamp) > 0.5) {
+        LOG(ERROR) << "[AddUwbData]: Uwb and imu timestamps are not synchronized!";
+        return false;
+    }
+
+    // Set timestamp and imu date.
+    state->timestamp = last_imu_ptr->timestamp;
+    state->imu_data_ptr = last_imu_ptr;
+
+    // Set initial mean.
+    // state->G_p_I.setZero();
+    state->G_p_I = uwb_data_ptr->location;
+
+    // We have no information to set initial velocity. 
+    // So, just set it to zero and given big covariance.
+    state->G_v_I.setZero();
+
+    // We can use the direction of gravity to set roll and pitch. 
+    // But, we cannot set the yaw. 
+    // So, we set yaw to zero and give it a big covariance.
+    if (!ComputeG_R_IFromImuData(&state->G_R_I)) {
+        LOG(WARNING) << "[AddUwbData]: Failed to compute G_R_I!";
+        return false;
+    }
+
+    // Set bias to zero.
+    state->acc_bias.setZero();
+    state->gyro_bias.setZero();
+    // state->acc_bias << -0.8, -1.0, 0.4;
+    // state->gyro_bias << -0.01, 0.01, 0.12;
+
+    // Set covariance.
+    state->cov.setZero();
+    state->cov.block<3, 3>(0, 0) = 200. * Eigen::Matrix3d::Identity(); // position std  m
+    state->cov.block<3, 3>(3, 3) = 200. * Eigen::Matrix3d::Identity(); // velocity std  m/s
+    // roll pitch std 10 degree.
+    state->cov.block<2, 2>(6, 6) = 10. * kDegreeToRadian * 10. * kDegreeToRadian * Eigen::Matrix2d::Identity();
+    // yaw std: 100 degree.
+    state->cov(8, 8)             = 100. * kDegreeToRadian * 100. * kDegreeToRadian; 
+    // Acc bias.
+    state->cov.block<3, 3>(9, 9) = 0.001 * Eigen::Matrix3d::Identity();
+    // Gyro bias.
+    state->cov.block<3, 3>(12, 12) = 0.001 * Eigen::Matrix3d::Identity();
+
+    return true;
+}
+
 bool Initializer::ComputeG_R_IFromImuData(Eigen::Matrix3d* G_R_I) {
     // Compute mean and std of the imu buffer.
     Eigen::Vector3d sum_acc(0., 0., 0.);

@@ -4,6 +4,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h>
+#include <imu_gps_localization/uwb.h>
 
 #include "localization_wrapper.h"
 

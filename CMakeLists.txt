@@ -6,10 +6,27 @@ add_compile_options(-std=c++14)
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  rospy
   nav_msgs
+  std_msgs
+  message_generation 
 )
 
-catkin_package()
+## Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  uwb.msg 
+)
+
+## Generate added messages and services with any dependencies listed here
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+
+catkin_package(
+  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+)
 
 add_subdirectory(imu_gps_localizer)
 
