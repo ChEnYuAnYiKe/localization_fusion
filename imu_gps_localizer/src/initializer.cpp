@@ -104,8 +104,8 @@ bool Initializer::AddUwbData(const UwbDataPtr uwb_data_ptr, State* state) {
     // Set bias to zero.
     state->acc_bias.setZero();
     state->gyro_bias.setZero();
-    // state->acc_bias << -0.8, -1.0, 0.4;
-    // state->gyro_bias << -0.01, 0.01, 0.12;
+    //state->acc_bias << -0.2, -0.4, 0.65;
+    //state->gyro_bias << 0, 0, 0.09;
 
     // Set covariance.
     state->cov.setZero();
@@ -116,9 +116,9 @@ bool Initializer::AddUwbData(const UwbDataPtr uwb_data_ptr, State* state) {
     // yaw std: 100 degree.
     state->cov(8, 8)             = 100. * kDegreeToRadian * 100. * kDegreeToRadian; 
     // Acc bias.
-    state->cov.block<3, 3>(9, 9) = 0.001 * Eigen::Matrix3d::Identity();
+    state->cov.block<3, 3>(9, 9) = 0.0001 * Eigen::Matrix3d::Identity();
     // Gyro bias.
-    state->cov.block<3, 3>(12, 12) = 0.001 * Eigen::Matrix3d::Identity();
+    state->cov.block<3, 3>(12, 12) = 0.0001 * Eigen::Matrix3d::Identity();
 
     return true;
 }
