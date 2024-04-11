@@ -13,7 +13,7 @@ ImuGpsLocalizer::ImuGpsLocalizer(const double acc_noise, const double gyro_noise
     initializer_ = std::make_unique<Initializer>(I_p_Gps);
     imu_processor_ = std::make_unique<ImuProcessor>(acc_noise, gyro_noise, 
                                                     acc_bias_noise, gyro_bias_noise,
-                                                    Eigen::Vector3d(0., 0., -9.8));
+                                                    Eigen::Vector3d(0., 0., -9.81));
     gps_processor_ = std::make_unique<GpsProcessor>(I_p_Gps);
     uwb_processor_ = std::make_unique<UwbProcessor>(I_p_Uwb);
 }
