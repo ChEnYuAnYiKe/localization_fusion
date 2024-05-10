@@ -25,11 +25,11 @@ public:
 
 private:
     void LogState(const ImuGpsLocalization::State& state);
-    void LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data, Eigen::Vector3d gps_enu);
+    // void LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data, Eigen::Vector3d gps_enu);
 
     void ConvertStateToRosTopic(const ImuGpsLocalization::State& state);
 
-    void ConvertGps_enuToRosTopic(const Eigen::Vector3d& gps_enu);
+    // void ConvertGps_enuToRosTopic(const Eigen::Vector3d& gps_enu);
 
     void ConvertUwbToRosTopic(const ImuGpsLocalization::UwbDataPtr& uwb_data);
     
@@ -41,6 +41,7 @@ private:
     //ros::Publisher gps_pub_;
     ros::Publisher uwb_pub_;
     ros::Publisher velocity_filter_pub_;
+    ros::Publisher position_filter_pub_;
 
     std::ofstream file_state_;
     //std::ofstream file_gps_;
@@ -51,6 +52,7 @@ private:
     nav_msgs::Path uwb_path_;
 
     geometry_msgs::TwistStamped velocity_filter_;
+    geometry_msgs::PoseStamped position_filter_;
 
     std::unique_ptr<ImuGpsLocalization::ImuGpsLocalizer> imu_gps_localizer_ptr_;
 };

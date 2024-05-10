@@ -41,14 +41,16 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
                                                               I_p_Gps, I_p_Uwb);
 
     // Subscribe topics.  mavros中的imu话题为/mavros/imu/data
-    imu_sub_ = nh.subscribe("/mavros/imu/data_raw", 50,  &LocalizationWrapper::ImuCallback, this);
+    imu_sub_ = nh.subscribe("/mavros/imu/data_raw", 100,  &LocalizationWrapper::ImuCallback, this);
     // gps_position_sub_ = nh.subscribe("/fix", 50,  &LocalizationWrapper::GpsPositionCallback, this);
-    uwb_sub_ = nh.subscribe("/uwb/data", 50, &LocalizationWrapper::UwbCallback, this);
+    uwb_sub_ = nh.subscribe("/uwb/data", 100, &LocalizationWrapper::UwbCallback, this);
 
-    state_pub_ = nh.advertise<nav_msgs::Path>("/fused_path", 50);
+    state_pub_ = nh.advertise<nav_msgs::Path>("/fused_path", 100);
     //gps_pub_ = nh.advertise<nav_msgs::Path>("/gps_path", 50);
-    uwb_pub_ = nh.advertise<nav_msgs::Path>("/uwb_path", 50);
-    velocity_filter_pub_ = nh.advertise<geometry_msgs::TwistStamped>("/velocity_filter", 50);
+    uwb_pub_ = nh.advertise<nav_msgs::Path>("/uwb_path", 100);
+    
+    velocity_filter_pub_ = nh.advertise<geometry_msgs::TwistStamped>("/velocity_filter", 100);
+    position_filter_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/position_filter", 100);
 }
 
 LocalizationWrapper::~LocalizationWrapper() {
@@ -76,6 +78,7 @@ void LocalizationWrapper::ImuCallback(const sensor_msgs::ImuConstPtr& imu_msg_pt
     ConvertStateToRosTopic(fused_state);
     state_pub_.publish(ros_path_);
     velocity_filter_pub_.publish(velocity_filter_);
+    position_filter_pub_.publish(position_filter_);
 
     // Log fused state.
     LogState(fused_state);
@@ -161,6 +164,8 @@ void LocalizationWrapper::ConvertStateToRosTopic(const ImuGpsLocalization::State
     velocity_filter_.twist.linear.x = state.G_v_I[0];
     velocity_filter_.twist.linear.y = state.G_v_I[1];
     velocity_filter_.twist.linear.z = state.G_v_I[2];
+
+    position_filter_ = pose;
 }
 
 // void LocalizationWrapper::ConvertGps_enuToRosTopic(const Eigen::Vector3d& gps_enu) {

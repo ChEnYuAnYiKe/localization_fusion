@@ -11,7 +11,7 @@ void UwbProcessor::UpdateStateByUwbPosition(const Eigen::Vector3d& init_uwb, con
     Eigen::Vector3d residual;
     ComputeJacobianAndResidual(init_uwb, uwb_data_ptr, *state, &H, &residual);
     // EKF.    
-    Eigen::Vector3d v(0.0001, 0.0004, 0.16);
+    Eigen::Vector3d v(0.0004, 0.0004, 0.09);
     const Eigen::Matrix3d& V = v.asDiagonal();
     const Eigen::MatrixXd& P = state->cov;
     const Eigen::MatrixXd K = P * H.transpose() * (H * P * H.transpose() + V).inverse();

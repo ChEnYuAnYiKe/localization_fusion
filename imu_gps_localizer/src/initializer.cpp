@@ -55,8 +55,8 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr, Stat
 
     // Set covariance.
     state->cov.setZero();
-    Eigen::Vector3d pos_cov(20., 20., 100);
-    Eigen::Vector3d vel_cov(15., 15., 100);
+    Eigen::Vector3d pos_cov(40., 40., 100);
+    Eigen::Vector3d vel_cov(40., 40., 100);
     state->cov.block<3, 3>(0, 0) = pos_cov.asDiagonal(); // position std
     state->cov.block<3, 3>(3, 3) = vel_cov.asDiagonal(); // velocity std
     // roll pitch std 10 degree.
@@ -104,25 +104,25 @@ bool Initializer::AddUwbData(const UwbDataPtr uwb_data_ptr, State* state) {
     }
 
     // Set bias to zero.
-    //state->acc_bias.setZero();
-    //state->gyro_bias.setZero();
-    state->acc_bias << -0.2, -0.5, -0.25;
-    state->gyro_bias << 0, 0, 0;
+    state->acc_bias.setZero();
+    state->gyro_bias.setZero();
+    //state->acc_bias << -0.2, -0.5, -0.25;
+    //state->gyro_bias << 0, 0, 0;
 
     // Set covariance.
     state->cov.setZero();
-    Eigen::Vector3d pos_cov(400, 300, 300);
+    Eigen::Vector3d pos_cov(100, 100, 100);
     Eigen::Vector3d vel_cov(100, 100, 100);
     state->cov.block<3, 3>(0, 0) = pos_cov.asDiagonal(); // position std
     state->cov.block<3, 3>(3, 3) = vel_cov.asDiagonal(); // velocity std
     // roll pitch std 10 degree.
-    state->cov.block<2, 2>(6, 6) = 10. * kDegreeToRadian * 10. * kDegreeToRadian * Eigen::Matrix2d::Identity();
+    state->cov.block<2, 2>(6, 6) = 25. * kDegreeToRadian * 25. * kDegreeToRadian * Eigen::Matrix2d::Identity();
     // yaw std: 100 degree.
-    state->cov(8, 8)             = 100. * kDegreeToRadian * 100. * kDegreeToRadian; 
+    state->cov(8, 8)             = 30. * kDegreeToRadian * 30. * kDegreeToRadian; 
     // Acc bias.
-    state->cov.block<3, 3>(9, 9) = 0.0025 * Eigen::Matrix3d::Identity();
+    state->cov.block<3, 3>(9, 9) = 0.01 * Eigen::Matrix3d::Identity();
     // Gyro bias.
-    state->cov.block<3, 3>(12, 12) = 0.0025 * Eigen::Matrix3d::Identity();
+    state->cov.block<3, 3>(12, 12) = 0.01 * Eigen::Matrix3d::Identity();
 
     return true;
 }
