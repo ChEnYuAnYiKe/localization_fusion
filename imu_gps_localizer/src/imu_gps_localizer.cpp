@@ -69,6 +69,8 @@ bool ImuGpsLocalizer::ProcessUwbData(const UwbDataPtr uwb_data_ptr) {
         LOG(INFO) << "[ProcessUwbData]: System initialized!";
         return true;
     }
+    // 排除异常点
+    
     // Update.
     uwb_processor_->UpdateStateByUwbPosition(init_uwb_, uwb_data_ptr, &state_);
 
