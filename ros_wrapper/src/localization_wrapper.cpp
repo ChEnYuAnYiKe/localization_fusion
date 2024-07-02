@@ -44,10 +44,11 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
     imu_sub_ = nh.subscribe("/mavros/imu/data_raw", 100,  &LocalizationWrapper::ImuCallback, this);
     // gps_position_sub_ = nh.subscribe("/fix", 50,  &LocalizationWrapper::GpsPositionCallback, this);
     uwb_sub_ = nh.subscribe("/uwb/data", 100, &LocalizationWrapper::UwbCallback, this);
+    lidar_sub_ = nh.subscribe("/lidar_position", 100, &LocalizationWrapper::LidarCallback, this);
 
-    state_pub_ = nh.advertise<nav_msgs::Path>("/fused_path", 100);
+    // state_pub_ = nh.advertise<nav_msgs::Path>("/fused_path", 100);
     //gps_pub_ = nh.advertise<nav_msgs::Path>("/gps_path", 50);
-    uwb_pub_ = nh.advertise<nav_msgs::Path>("/uwb_path", 100);
+    // uwb_pub_ = nh.advertise<nav_msgs::Path>("/uwb_path", 100);
     
     velocity_filter_pub_ = nh.advertise<geometry_msgs::TwistStamped>("/velocity_filter", 100);
     position_filter_pub_ = nh.advertise<geometry_msgs::PoseStamped>("/position_filter", 100);
@@ -109,15 +110,22 @@ void LocalizationWrapper::ImuCallback(const sensor_msgs::ImuConstPtr& imu_msg_pt
 // }
 
 void LocalizationWrapper::UwbCallback(const imu_gps_localization::uwbConstPtr& uwb_msg_ptr) {
-    ImuGpsLocalization::UwbDataPtr uwb_data_ptr = std::make_shared<ImuGpsLocalization::UwbData>();
-    uwb_data_ptr->timestamp = uwb_msg_ptr->time.toSec();
-    uwb_data_ptr->location << uwb_msg_ptr->x, uwb_msg_ptr->y, uwb_msg_ptr->z;
+    // ImuGpsLocalization::UwbDataPtr uwb_data_ptr = std::make_shared<ImuGpsLocalization::UwbData>();
+    uwb_data_ptr_->timestamp = uwb_msg_ptr->time.toSec();
+    // uwb_data_ptr->location << uwb_msg_ptr->x, uwb_msg_ptr->y, uwb_msg_ptr->z;
+	uwb_data_ptr_->location[0] = uwb_msg_ptr->x;
+    uwb_data_ptr_->location[1] = uwb_msg_ptr->y;
 
-    imu_gps_localizer_ptr_->ProcessUwbData(uwb_data_ptr);
+	imu_gps_localizer_ptr_->ProcessUwbData(uwb_data_ptr_);
 
-    ConvertUwbToRosTopic(uwb_data_ptr);
+    ConvertUwbToRosTopic(uwb_data_ptr_);
     uwb_pub_.publish(uwb_path_);
 }
+
+void LocalizationWrapper::LidarCallback(const geometry_msgs::PoseStamped& lidar_msg_ptr) {
+    uwb_data_ptr_->location[2] = lidar_msg_ptr.pose.position.z;
+
+}   
 
 void LocalizationWrapper::LogState(const ImuGpsLocalization::State& state) {
     // const Eigen::Quaterniond G_q_I(state.G_R_I);

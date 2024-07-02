@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
 #include <sensor_msgs/NavSatFix.h>
@@ -19,9 +20,11 @@ public:
 
     void ImuCallback(const sensor_msgs::ImuConstPtr& imu_msg_ptr);
 
-    void GpsPositionCallback(const sensor_msgs::NavSatFixConstPtr& gps_msg_ptr);
+    // void GpsPositionCallback(const sensor_msgs::NavSatFixConstPtr& gps_msg_ptr);
 
     void UwbCallback(const imu_gps_localization::uwbConstPtr& uwb_msg_ptr);
+
+    void LidarCallback(const geometry_msgs::PoseStamped& lidar_msg_ptr);
 
 private:
     void LogState(const ImuGpsLocalization::State& state);
@@ -36,6 +39,7 @@ private:
     ros::Subscriber imu_sub_;
     //ros::Subscriber gps_position_sub_;
     ros::Subscriber uwb_sub_;
+    ros::Subscriber lidar_sub_;
 
     ros::Publisher state_pub_;
     //ros::Publisher gps_pub_;
@@ -50,6 +54,9 @@ private:
     nav_msgs::Path ros_path_;
     //nav_msgs::Path gps_path_;
     nav_msgs::Path uwb_path_;
+
+    // uwb position info using lidar_height
+    ImuGpsLocalization::UwbDataPtr uwb_data_ptr_ = std::make_shared<ImuGpsLocalization::UwbData>();
 
     geometry_msgs::TwistStamped velocity_filter_;
     geometry_msgs::PoseStamped position_filter_;
