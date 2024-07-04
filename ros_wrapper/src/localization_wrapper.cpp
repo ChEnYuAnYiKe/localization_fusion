@@ -47,9 +47,9 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
 	lidar_sub_ = nh.subscribe("/lidar_position", 100,
 	                          &LocalizationWrapper::LidarCallback, this);
 
-	// state_pub_ = nh.advertise<nav_msgs::Path>("/fused_path", 100);
+	state_pub_ = nh.advertise<nav_msgs::Path>("/fused_path", 100);
 	// gps_pub_ = nh.advertise<nav_msgs::Path>("/gps_path", 50);
-	// uwb_pub_ = nh.advertise<nav_msgs::Path>("/uwb_path", 100);
+	uwb_pub_ = nh.advertise<nav_msgs::Path>("/uwb_path", 100);
 
 	velocity_filter_pub_ =
 	    nh.advertise<geometry_msgs::TwistStamped>("/velocity_filter", 100);
