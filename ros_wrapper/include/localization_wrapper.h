@@ -11,30 +11,31 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h>
 
-class LocalizationWrapper {
+class LocalizationWrapper
+{
 public:
-	LocalizationWrapper(ros::NodeHandle& nh);
+	LocalizationWrapper(ros::NodeHandle &nh);
 	~LocalizationWrapper();
 
-	void ImuCallback(const sensor_msgs::ImuConstPtr& imu_msg_ptr);
+	void ImuCallback(const sensor_msgs::ImuConstPtr &imu_msg_ptr);
 
 	// void GpsPositionCallback(const sensor_msgs::NavSatFixConstPtr&
 	// gps_msg_ptr);
 
-	void UwbCallback(const imu_gps_localization::uwbConstPtr& uwb_msg_ptr);
+	void UwbCallback(const imu_gps_localization::uwbConstPtr &uwb_msg_ptr);
 
-	void LidarCallback(const geometry_msgs::PoseStamped& lidar_msg_ptr);
+	void LidarCallback(const geometry_msgs::PoseStamped::ConstPtr &lidar_msg_ptr);
 
 private:
-	void LogState(const ImuGpsLocalization::State& state);
+	void LogState(const ImuGpsLocalization::State &state);
 	// void LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data,
 	// Eigen::Vector3d gps_enu);
 
-	void ConvertStateToRosTopic(const ImuGpsLocalization::State& state);
+	void ConvertStateToRosTopic(const ImuGpsLocalization::State &state);
 
 	// void ConvertGps_enuToRosTopic(const Eigen::Vector3d& gps_enu);
 
-	void ConvertUwbToRosTopic(const ImuGpsLocalization::UwbDataPtr& uwb_data);
+	void ConvertUwbToRosTopic(const ImuGpsLocalization::UwbDataPtr &uwb_data);
 
 	ros::Subscriber imu_sub_;
 	// ros::Subscriber gps_position_sub_;
@@ -57,7 +58,7 @@ private:
 
 	// uwb position info using lidar_height
 	ImuGpsLocalization::UwbDataPtr uwb_data_ptr_ =
-	    std::make_shared<ImuGpsLocalization::UwbData>();
+		std::make_shared<ImuGpsLocalization::UwbData>();
 
 	geometry_msgs::TwistStamped velocity_filter_;
 	geometry_msgs::PoseStamped position_filter_;

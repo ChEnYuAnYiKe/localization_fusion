@@ -3,7 +3,8 @@
 #include <glog/logging.h>
 #include <iomanip>
 
-LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
+LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
+{
 	// Load configs.
 	double acc_noise, gyro_noise, acc_bias_noise, gyro_bias_noise;
 	nh.param("acc_noise", acc_noise, 1e-1);
@@ -33,56 +34,59 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle& nh) {
 
 	// Initialization imu gps localizer.
 	imu_gps_localizer_ptr_ =
-	    std::make_unique<ImuGpsLocalization::ImuGpsLocalizer>(
-	        acc_noise, gyro_noise, acc_bias_noise, gyro_bias_noise, I_p_Gps,
-	        I_p_Uwb);
+		std::make_unique<ImuGpsLocalization::ImuGpsLocalizer>(
+			acc_noise, gyro_noise, acc_bias_noise, gyro_bias_noise, I_p_Gps,
+			I_p_Uwb);
 
 	// Subscribe topics.  mavros中的imu话题为/mavros/imu/data
 	imu_sub_ = nh.subscribe("/mavros/imu/data_raw", 100,
-	                        &LocalizationWrapper::ImuCallback, this);
+							&LocalizationWrapper::ImuCallback, this);
 	// gps_position_sub_ = nh.subscribe("/fix", 50,
 	// &LocalizationWrapper::GpsPositionCallback, this);
 	uwb_sub_ =
-	    nh.subscribe("/uwb/data", 100, &LocalizationWrapper::UwbCallback, this);
+		nh.subscribe("/uwb/data", 100, &LocalizationWrapper::UwbCallback, this);
 	lidar_sub_ = nh.subscribe("/lidar_position", 100,
-	                          &LocalizationWrapper::LidarCallback, this);
+							  &LocalizationWrapper::LidarCallback, this);
 
 	state_pub_ = nh.advertise<nav_msgs::Path>("/fused_path", 100);
 	// gps_pub_ = nh.advertise<nav_msgs::Path>("/gps_path", 50);
 	uwb_pub_ = nh.advertise<nav_msgs::Path>("/uwb_path", 100);
 
 	velocity_filter_pub_ =
-	    nh.advertise<geometry_msgs::TwistStamped>("/velocity_filter", 100);
+		nh.advertise<geometry_msgs::TwistStamped>("/velocity_filter", 100);
 	position_filter_pub_ =
-	    nh.advertise<geometry_msgs::PoseStamped>("/position_filter", 100);
+		nh.advertise<geometry_msgs::PoseStamped>("/position_filter", 100);
 }
 
-LocalizationWrapper::~LocalizationWrapper() {
+LocalizationWrapper::~LocalizationWrapper()
+{
 	file_state_.close();
 	// file_gps_.close();
 }
 
 void LocalizationWrapper::ImuCallback(
-    const sensor_msgs::ImuConstPtr& imu_msg_ptr) {
+	const sensor_msgs::ImuConstPtr &imu_msg_ptr)
+{
 	ImuGpsLocalization::ImuDataPtr imu_data_ptr =
-	    std::make_shared<ImuGpsLocalization::ImuData>();
+		std::make_shared<ImuGpsLocalization::ImuData>();
 	imu_data_ptr->timestamp = imu_msg_ptr->header.stamp.toSec();
 	imu_data_ptr->acc << imu_msg_ptr->linear_acceleration.x / 1000.,
-	    imu_msg_ptr->linear_acceleration.y / 1000.,
-	    imu_msg_ptr->linear_acceleration.z / 1000.;
+		imu_msg_ptr->linear_acceleration.y / 1000.,
+		imu_msg_ptr->linear_acceleration.z / 1000.;
 	imu_data_ptr->gyro << imu_msg_ptr->angular_velocity.x,
-	    imu_msg_ptr->angular_velocity.y, imu_msg_ptr->angular_velocity.z;
+		imu_msg_ptr->angular_velocity.y, imu_msg_ptr->angular_velocity.z;
 
 	ImuGpsLocalization::State fused_state;
 	const bool ok =
-	    imu_gps_localizer_ptr_->ProcessImuData(imu_data_ptr, &fused_state);
-	if (!ok) {
+		imu_gps_localizer_ptr_->ProcessImuData(imu_data_ptr, &fused_state);
+	if (!ok)
+	{
 		return;
 	}
 
 	// Publish fused state.
 	ConvertStateToRosTopic(fused_state);
-	state_pub_.publish(ros_path_);
+	// state_pub_.publish(ros_path_);
 	velocity_filter_pub_.publish(velocity_filter_);
 	position_filter_pub_.publish(position_filter_);
 
@@ -118,7 +122,8 @@ void LocalizationWrapper::ImuCallback(
 // }
 
 void LocalizationWrapper::UwbCallback(
-    const imu_gps_localization::uwbConstPtr& uwb_msg_ptr) {
+	const imu_gps_localization::uwbConstPtr &uwb_msg_ptr)
+{
 	// ImuGpsLocalization::UwbDataPtr uwb_data_ptr =
 	// std::make_shared<ImuGpsLocalization::UwbData>();
 	uwb_data_ptr_->timestamp = uwb_msg_ptr->time.toSec();
@@ -129,28 +134,31 @@ void LocalizationWrapper::UwbCallback(
 	imu_gps_localizer_ptr_->ProcessUwbData(uwb_data_ptr_);
 
 	ConvertUwbToRosTopic(uwb_data_ptr_);
-	uwb_pub_.publish(uwb_path_);
+	// uwb_pub_.publish(uwb_path_);
 }
 
 void LocalizationWrapper::LidarCallback(
-    const geometry_msgs::PoseStamped& lidar_msg_ptr) {
-	uwb_data_ptr_->location[2] = lidar_msg_ptr.pose.position.z;
+	const geometry_msgs::PoseStamped::ConstPtr &lidar_msg_ptr)
+{
+	geometry_msgs::PoseStamped current_lidar_vz_ = *lidar_msg_ptr;
+	uwb_data_ptr_->location[2] = current_lidar_vz_.pose.position.z;
 }
 
-void LocalizationWrapper::LogState(const ImuGpsLocalization::State& state) {
+void LocalizationWrapper::LogState(const ImuGpsLocalization::State &state)
+{
 	// const Eigen::Quaterniond G_q_I(state.G_R_I);
 	Eigen::Vector3d eulerAngle = state.G_R_I.eulerAngles(2, 1, 0);
 
 	file_state_
-	    << std::fixed << std::setprecision(15) << state.timestamp
-	    << ","
-	    // << state.lla[0] << "," << state.lla[1] << "," << state.lla[2] << ","
-	    << state.G_p_I[0] << "," << state.G_p_I[1] << "," << state.G_p_I[2]
-	    << "," << state.G_v_I[0] << "," << state.G_v_I[1] << ","
-	    << state.G_v_I[2] << "," << eulerAngle[0] << "," << eulerAngle[1] << ","
-	    << eulerAngle[2] << "," << state.acc_bias[0] << "," << state.acc_bias[1]
-	    << "," << state.acc_bias[2] << "," << state.gyro_bias[0] << ","
-	    << state.gyro_bias[1] << "," << state.gyro_bias[2] << "\n";
+		<< std::fixed << std::setprecision(15) << state.timestamp
+		<< ","
+		// << state.lla[0] << "," << state.lla[1] << "," << state.lla[2] << ","
+		<< state.G_p_I[0] << "," << state.G_p_I[1] << "," << state.G_p_I[2]
+		<< "," << state.G_v_I[0] << "," << state.G_v_I[1] << ","
+		<< state.G_v_I[2] << "," << eulerAngle[0] << "," << eulerAngle[1] << ","
+		<< eulerAngle[2] << "," << state.acc_bias[0] << "," << state.acc_bias[1]
+		<< "," << state.acc_bias[2] << "," << state.gyro_bias[0] << ","
+		<< state.gyro_bias[1] << "," << state.gyro_bias[2] << "\n";
 }
 
 // void LocalizationWrapper::LogGps(const ImuGpsLocalization::GpsPositionDataPtr
@@ -164,7 +172,8 @@ void LocalizationWrapper::LogState(const ImuGpsLocalization::State& state) {
 // }
 
 void LocalizationWrapper::ConvertStateToRosTopic(
-    const ImuGpsLocalization::State& state) {
+	const ImuGpsLocalization::State &state)
+{
 	ros_path_.header.frame_id = "global";
 	ros_path_.header.stamp = ros::Time::now();
 
@@ -207,7 +216,8 @@ void LocalizationWrapper::ConvertStateToRosTopic(
 // }
 
 void LocalizationWrapper::ConvertUwbToRosTopic(
-    const ImuGpsLocalization::UwbDataPtr& uwb_data) {
+	const ImuGpsLocalization::UwbDataPtr &uwb_data)
+{
 	uwb_path_.header.frame_id = "global";
 	uwb_path_.header.stamp = ros::Time::now();
 
