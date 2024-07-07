@@ -39,8 +39,9 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
 			I_p_Uwb);
 
 	// Subscribe topics.  mavros中的imu话题为/mavros/imu/data
-	imu_sub_ = nh.subscribe("/mavros/imu/data_raw", 100,
-							&LocalizationWrapper::ImuCallback, this);
+	// imu_sub_ = nh.subscribe("/mavros/imu/data_raw", 100, &LocalizationWrapper::ImuCallback, this);
+	imu_sub_ = nh.subscribe("/imu", 100, &LocalizationWrapper::ImuCallback, this);
+
 	// gps_position_sub_ = nh.subscribe("/fix", 50,
 	// &LocalizationWrapper::GpsPositionCallback, this);
 	uwb_sub_ =
@@ -64,15 +65,45 @@ LocalizationWrapper::~LocalizationWrapper()
 	// file_gps_.close();
 }
 
+// void LocalizationWrapper::ImuCallback(
+// 	const sensor_msgs::ImuConstPtr &imu_msg_ptr)
+// {
+// 	ImuGpsLocalization::ImuDataPtr imu_data_ptr =
+// 		std::make_shared<ImuGpsLocalization::ImuData>();
+// 	imu_data_ptr->timestamp = imu_msg_ptr->header.stamp.toSec();
+// 	imu_data_ptr->acc << imu_msg_ptr->linear_acceleration.x / 1000.,
+// 		imu_msg_ptr->linear_acceleration.y / 1000.,
+// 		imu_msg_ptr->linear_acceleration.z / 1000.;
+// 	imu_data_ptr->gyro << imu_msg_ptr->angular_velocity.x,
+// 		imu_msg_ptr->angular_velocity.y, imu_msg_ptr->angular_velocity.z;
+
+// 	ImuGpsLocalization::State fused_state;
+// 	const bool ok =
+// 		imu_gps_localizer_ptr_->ProcessImuData(imu_data_ptr, &fused_state);
+// 	if (!ok)
+// 	{
+// 		return;
+// 	}
+
+// 	// Publish fused state.
+// 	ConvertStateToRosTopic(fused_state);
+// 	// state_pub_.publish(ros_path_);
+// 	velocity_filter_pub_.publish(velocity_filter_);
+// 	position_filter_pub_.publish(position_filter_);
+
+// 	// Log fused state.
+// 	LogState(fused_state);
+// }
+
 void LocalizationWrapper::ImuCallback(
 	const sensor_msgs::ImuConstPtr &imu_msg_ptr)
 {
 	ImuGpsLocalization::ImuDataPtr imu_data_ptr =
 		std::make_shared<ImuGpsLocalization::ImuData>();
 	imu_data_ptr->timestamp = imu_msg_ptr->header.stamp.toSec();
-	imu_data_ptr->acc << imu_msg_ptr->linear_acceleration.x / 1000.,
-		imu_msg_ptr->linear_acceleration.y / 1000.,
-		imu_msg_ptr->linear_acceleration.z / 1000.;
+	imu_data_ptr->acc << imu_msg_ptr->linear_acceleration.x,
+		imu_msg_ptr->linear_acceleration.y,
+		imu_msg_ptr->linear_acceleration.z;
 	imu_data_ptr->gyro << imu_msg_ptr->angular_velocity.x,
 		imu_msg_ptr->angular_velocity.y, imu_msg_ptr->angular_velocity.z;
 
