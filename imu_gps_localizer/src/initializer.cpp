@@ -114,8 +114,8 @@ bool Initializer::AddUwbData(const UwbDataPtr uwb_data_ptr, State* state) {
 
 	// Set covariance.
 	state->cov.setZero();
-	Eigen::Vector3d pos_cov(100, 100, 100);
-	Eigen::Vector3d vel_cov(100, 100, 100);
+	Eigen::Vector3d pos_cov(25, 25, 25);
+	Eigen::Vector3d vel_cov(25, 25, 25);
 	state->cov.block<3, 3>(0, 0) = pos_cov.asDiagonal(); // position std
 	state->cov.block<3, 3>(3, 3) = vel_cov.asDiagonal(); // velocity std
 	// roll pitch std 10 degree.
