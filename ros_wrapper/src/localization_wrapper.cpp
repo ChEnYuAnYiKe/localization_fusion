@@ -40,14 +40,14 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
 
 	// Subscribe topics.  mavros中的imu话题为/mavros/imu/data
 	// imu_sub_ = nh.subscribe("/mavros/imu/data_raw", 100, &LocalizationWrapper::ImuCallback, this);
-	imu_sub_ = nh.subscribe("/imu", 100, &LocalizationWrapper::ImuCallback, this);
+	imu_sub_ = nh.subscribe("/imu_filtered", 100, &LocalizationWrapper::ImuCallback, this);
 
 	// gps_position_sub_ = nh.subscribe("/fix", 50,
 	// &LocalizationWrapper::GpsPositionCallback, this);
 	uwb_sub_ =
-		nh.subscribe("/uwb/data", 100, &LocalizationWrapper::UwbCallback, this);
-	lidar_sub_ = nh.subscribe("/lidar_position", 100,
-							  &LocalizationWrapper::LidarCallback, this);
+		nh.subscribe("/vrpn_client_node/new/pose", 100, &LocalizationWrapper::UwbCallback, this);
+	// lidar_sub_ = nh.subscribe("/lidar_position", 100,
+	// 						  &LocalizationWrapper::LidarCallback, this);
 
 	state_pub_ = nh.advertise<nav_msgs::Path>("/fused_path", 100);
 	// gps_pub_ = nh.advertise<nav_msgs::Path>("/gps_path", 50);
@@ -153,27 +153,27 @@ void LocalizationWrapper::ImuCallback(
 // }
 
 void LocalizationWrapper::UwbCallback(
-	const imu_gps_localization::uwbConstPtr &uwb_msg_ptr)
+	const geometry_msgs::PoseStamped::ConstPtr& uwb_msg_ptr)
 {
-	// ImuGpsLocalization::UwbDataPtr uwb_data_ptr =
-	// std::make_shared<ImuGpsLocalization::UwbData>();
-	uwb_data_ptr_->timestamp = uwb_msg_ptr->time.toSec();
+	ImuGpsLocalization::UwbDataPtr uwb_data_ptr = std::make_shared<ImuGpsLocalization::UwbData>();
+	uwb_data_ptr->timestamp = uwb_msg_ptr->header.stamp.toSec();
 	// uwb_data_ptr->location << uwb_msg_ptr->x, uwb_msg_ptr->y, uwb_msg_ptr->z;
-	uwb_data_ptr_->location[0] = uwb_msg_ptr->x;
-	uwb_data_ptr_->location[1] = uwb_msg_ptr->y;
+	uwb_data_ptr->location[0] = uwb_msg_ptr->pose.position.x;
+	uwb_data_ptr->location[1] = uwb_msg_ptr->pose.position.y;
+	uwb_data_ptr->location[2] = uwb_msg_ptr->pose.position.z;
 
-	imu_gps_localizer_ptr_->ProcessUwbData(uwb_data_ptr_);
+	imu_gps_localizer_ptr_->ProcessUwbData(uwb_data_ptr);
 
-	ConvertUwbToRosTopic(uwb_data_ptr_);
+	ConvertUwbToRosTopic(uwb_data_ptr);
 	// uwb_pub_.publish(uwb_path_);
 }
 
-void LocalizationWrapper::LidarCallback(
-	const geometry_msgs::PoseStamped::ConstPtr &lidar_msg_ptr)
-{
-	geometry_msgs::PoseStamped current_lidar_vz_ = *lidar_msg_ptr;
-	uwb_data_ptr_->location[2] = current_lidar_vz_.pose.position.z;
-}
+// void LocalizationWrapper::LidarCallback(
+// 	const geometry_msgs::PoseStamped::ConstPtr &lidar_msg_ptr)
+// {
+// 	geometry_msgs::PoseStamped current_lidar_vz_ = *lidar_msg_ptr;
+// 	uwb_data_ptr_->location[2] = current_lidar_vz_.pose.position.z;
+// }
 
 void LocalizationWrapper::LogState(const ImuGpsLocalization::State &state)
 {
