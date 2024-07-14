@@ -40,12 +40,12 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
 
 	// Subscribe topics.  mavros中的imu话题为/mavros/imu/data
 	// imu_sub_ = nh.subscribe("/mavros/imu/data_raw", 100, &LocalizationWrapper::ImuCallback, this);
-	imu_sub_ = nh.subscribe("/imu_filtered", 100, &LocalizationWrapper::ImuCallback, this);
+	imu_sub_ = nh.subscribe("/imu_filtered", 200, &LocalizationWrapper::ImuCallback, this);
 
 	// gps_position_sub_ = nh.subscribe("/fix", 50,
 	// &LocalizationWrapper::GpsPositionCallback, this);
 	uwb_sub_ =
-		nh.subscribe("/vrpn_client_node/new/pose", 100, &LocalizationWrapper::UwbCallback, this);
+		nh.subscribe("/vrpn_client_node/new/pose", 200, &LocalizationWrapper::UwbCallback, this);
 	// lidar_sub_ = nh.subscribe("/lidar_position", 100,
 	// 						  &LocalizationWrapper::LidarCallback, this);
 
@@ -54,9 +54,9 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
 	uwb_pub_ = nh.advertise<nav_msgs::Path>("/uwb_path", 100);
 
 	velocity_filter_pub_ =
-		nh.advertise<geometry_msgs::TwistStamped>("/velocity_filter", 100);
+		nh.advertise<geometry_msgs::TwistStamped>("/velocity_filter", 200);
 	position_filter_pub_ =
-		nh.advertise<geometry_msgs::PoseStamped>("/position_filter", 100);
+		nh.advertise<geometry_msgs::PoseStamped>("/position_filter", 200);
 }
 
 LocalizationWrapper::~LocalizationWrapper()
@@ -153,14 +153,14 @@ void LocalizationWrapper::ImuCallback(
 // }
 
 void LocalizationWrapper::UwbCallback(
-	const geometry_msgs::PoseStamped::ConstPtr& uwb_msg_ptr)
+	const geometry_msgs::PoseStamped::ConstPtr& msg)
 {
 	ImuGpsLocalization::UwbDataPtr uwb_data_ptr = std::make_shared<ImuGpsLocalization::UwbData>();
-	uwb_data_ptr->timestamp = uwb_msg_ptr->header.stamp.toSec();
+	uwb_data_ptr->timestamp = msg->header.stamp.toSec();
 	// uwb_data_ptr->location << uwb_msg_ptr->x, uwb_msg_ptr->y, uwb_msg_ptr->z;
-	uwb_data_ptr->location[0] = uwb_msg_ptr->pose.position.x;
-	uwb_data_ptr->location[1] = uwb_msg_ptr->pose.position.y;
-	uwb_data_ptr->location[2] = uwb_msg_ptr->pose.position.z;
+	uwb_data_ptr->location[0] = msg->pose.position.x;
+	uwb_data_ptr->location[1] = msg->pose.position.y;
+	uwb_data_ptr->location[2] = msg->pose.position.z;
 
 	imu_gps_localizer_ptr_->ProcessUwbData(uwb_data_ptr);
 
