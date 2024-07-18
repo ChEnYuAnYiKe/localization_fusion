@@ -1,6 +1,5 @@
 #include "imu_gps_localizer/imu_gps_localizer.h"
 #include "imu_gps_localizer/utils.h"
-#include <glog/logging.h>
 
 namespace ImuGpsLocalization {
 
@@ -47,7 +46,7 @@ bool ImuGpsLocalizer::ProcessGpsPositionData(
 
 		initialized_ = true;
 
-		LOG(INFO) << "[ProcessGpsPositionData]: System initialized!";
+		ROS_INFO_STREAM("[ProcessGpsPositionData]: System initialized!");
 		return true;
 	}
 
@@ -69,7 +68,7 @@ bool ImuGpsLocalizer::ProcessUwbData(const UwbDataPtr uwb_data_ptr) {
 
 		initialized_ = true;
 
-		LOG(INFO) << "[ProcessUwbData]: System initialized!";
+		ROS_INFO_STREAM("[ProcessUwbData]: System initialized!");
 		return true;
 	}
 	// 排除异常点

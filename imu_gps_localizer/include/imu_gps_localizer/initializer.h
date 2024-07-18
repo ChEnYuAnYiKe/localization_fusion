@@ -2,6 +2,7 @@
 
 #include "imu_gps_localizer/base_type.h"
 #include <deque>
+#include <ros/ros.h>
 
 namespace ImuGpsLocalization {
 

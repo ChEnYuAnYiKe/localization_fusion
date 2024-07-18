@@ -1,6 +1,5 @@
 #include "localization_wrapper.h"
 #include "imu_gps_localizer/base_type.h"
-#include <glog/logging.h>
 #include <iomanip>
 
 LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
@@ -28,9 +27,9 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
 	ros::param::get("log_folder", log_folder);
 
 	// Log.
-	file_state_.open(log_folder + "/state.csv");
+	// file_state_.open(log_folder + "/state.csv");
 	// file_gps_.open(log_folder +"/gps.csv");
-	file_uwb_.open(log_folder + "/uwb.csv");
+	// file_uwb_.open(log_folder + "/uwb.csv");
 
 	// Initialization imu gps localizer.
 	imu_gps_localizer_ptr_ =
@@ -60,7 +59,7 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
 
 LocalizationWrapper::~LocalizationWrapper()
 {
-	file_state_.close();
+	// file_state_.close();
 	// file_gps_.close();
 }
 
@@ -91,7 +90,7 @@ void LocalizationWrapper::ImuCallback(
 	position_filter_pub_.publish(position_filter_);
 
 	// Log fused state.
-	LogState(fused_state);
+	// LogState(fused_state);
 }
 
 // void LocalizationWrapper::GpsPositionCallback(const

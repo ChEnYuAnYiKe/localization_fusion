@@ -1,7 +1,6 @@
 #include "imu_gps_localizer/initializer.h"
 #include "imu_gps_localizer/utils.h"
 #include <Eigen/Dense>
-#include <glog/logging.h>
 
 namespace ImuGpsLocalization {
 
@@ -19,14 +18,14 @@ void Initializer::AddImuData(const ImuDataPtr imu_data_ptr) {
 bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr,
                                      State* state) {
 	if (imu_buffer_.size() < kImuDataBufferLength) {
-		LOG(WARNING) << "[AddGpsPositionData]: No enought imu data!";
+		ROS_WARN_STREAM("[AddGpsPositionData]: No enought imu data!");
 		return false;
 	}
 
 	const ImuDataPtr last_imu_ptr = imu_buffer_.back();
 	if (std::abs(gps_data_ptr->timestamp - last_imu_ptr->timestamp) > 0.5) {
-		LOG(ERROR) << "[AddGpsPositionData]: Gps and imu timestamps are not "
-		              "synchronized!";
+		ROS_WARN_STREAM("[AddGpsPositionData]: Gps and imu timestamps are not "
+		              "synchronized!");
 		return false;
 	}
 
@@ -45,7 +44,7 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr,
 	// But, we cannot set the yaw.
 	// So, we set yaw to zero and give it a big covariance.
 	if (!ComputeG_R_IFromImuData(&state->G_R_I)) {
-		LOG(WARNING) << "[AddGpsPositionData]: Failed to compute G_R_I!";
+		ROS_WARN_STREAM("[AddGpsPositionData]: Failed to compute G_R_I!");
 		return false;
 	}
 
@@ -75,14 +74,13 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr,
 
 bool Initializer::AddUwbData(const UwbDataPtr uwb_data_ptr, State* state) {
 	if (imu_buffer_.size() < kImuDataBufferLength) {
-		LOG(WARNING) << "[AddUwbData]: No enought imu data!";
+		ROS_WARN_STREAM("[AddUwbData]: No enought imu data!");
 		return false;
 	}
 
 	const ImuDataPtr last_imu_ptr = imu_buffer_.back();
 	if (std::abs(uwb_data_ptr->timestamp - last_imu_ptr->timestamp) > 0.5) {
-		LOG(ERROR)
-		    << "[AddUwbData]: Uwb and imu timestamps are not synchronized!";
+		ROS_WARN_STREAM("[AddUwbData]: Uwb and imu timestamps are not synchronized!");
 		return false;
 	}
 
@@ -102,7 +100,7 @@ bool Initializer::AddUwbData(const UwbDataPtr uwb_data_ptr, State* state) {
 	// But, we cannot set the yaw.
 	// So, we set yaw to zero and give it a big covariance.
 	if (!ComputeG_R_IFromImuData(&state->G_R_I)) {
-		LOG(WARNING) << "[AddUwbData]: Failed to compute G_R_I!";
+		ROS_WARN_STREAM("[AddUwbData]: Failed to compute G_R_I!");
 		return false;
 	}
 
@@ -148,8 +146,7 @@ bool Initializer::ComputeG_R_IFromImuData(Eigen::Matrix3d* G_R_I) {
 	    (sum_err2 / (double)imu_buffer_.size()).cwiseSqrt();
 
 	if (std_acc.maxCoeff() > kAccStdLimit) {
-		LOG(WARNING) << "[ComputeG_R_IFromImuData]: Too big acc std: "
-		             << std_acc.transpose();
+		ROS_WARN_STREAM("[ComputeG_R_IFromImuData]: Too big acc std");
 		return false;
 	}
 

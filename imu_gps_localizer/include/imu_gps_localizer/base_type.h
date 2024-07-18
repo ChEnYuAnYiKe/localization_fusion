@@ -2,6 +2,7 @@
 
 #include <Eigen/Dense>
 #include <memory>
+#include <ros/ros.h>
 
 namespace ImuGpsLocalization {
 

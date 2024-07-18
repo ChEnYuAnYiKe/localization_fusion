@@ -45,7 +45,6 @@ add_library(ros_wrapper_lib
 target_link_libraries(ros_wrapper_lib
   ${catkin_LIBRARIES}
   imu_gps_localizer_lib
-  glog
 )
 
 ## Localization node.

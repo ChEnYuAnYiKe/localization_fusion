@@ -11,6 +11,7 @@ add_subdirectory(third_party/GeographicLib)
 include_directories(
   include
   ${EIGEN3_INCLUDE_DIR}
+  ${catkin_INCLUDE_DIRS}
   third_party/GeographicLib/include
 )
 
@@ -24,5 +25,6 @@ add_library(imu_gps_localizer_lib
 
 target_link_libraries(imu_gps_localizer_lib
 	${EIGEN3_LIBS}
+  ${catkin_LIBRARIES}
   libGeographiccc
 )

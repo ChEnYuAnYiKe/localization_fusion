@@ -1,7 +1,6 @@
 #include "imu_gps_localizer/imu_processor.h"
 #include "imu_gps_localizer/utils.h"
 #include <Eigen/Dense>
-#include <glog/logging.h>
 
 namespace ImuGpsLocalization {
 
