@@ -52,9 +52,9 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
 	uwb_pub_ = nh.advertise<nav_msgs::Path>("/uwb_path", 100);
 
 	velocity_filter_pub_ =
-		nh.advertise<geometry_msgs::TwistStamped>("/velocity_filter", 100);
+		nh.advertise<geometry_msgs::TwistStamped>("/filter/velocity", 100);
 	position_filter_pub_ =
-		nh.advertise<geometry_msgs::PoseStamped>("/position_filter", 100);
+		nh.advertise<geometry_msgs::PoseStamped>("/filter//position_filter", 100);
 }
 
 LocalizationWrapper::~LocalizationWrapper()
