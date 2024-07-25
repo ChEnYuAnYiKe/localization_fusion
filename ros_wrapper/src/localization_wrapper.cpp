@@ -54,7 +54,7 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
 	velocity_filter_pub_ =
 		nh.advertise<geometry_msgs::TwistStamped>("/filter/velocity", 100);
 	position_filter_pub_ =
-		nh.advertise<geometry_msgs::PoseStamped>("/filter//position_filter", 100);
+		nh.advertise<geometry_msgs::PoseStamped>("/filter/position", 100);
 }
 
 LocalizationWrapper::~LocalizationWrapper()
