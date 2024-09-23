@@ -121,14 +121,14 @@ void LocalizationWrapper::ImuCallback(
 // }
 
 void LocalizationWrapper::UwbCallback(
-	const imu_gps_localization::uwbConstPtr &uwb_msg_ptr)
+	const geometry_msgs::PoseStamped::ConstPtr &uwb_msg_ptr)
 {
 	// ImuGpsLocalization::UwbDataPtr uwb_data_ptr =
 	// std::make_shared<ImuGpsLocalization::UwbData>();
-	uwb_data_ptr_->timestamp = uwb_msg_ptr->time.toSec();
+	uwb_data_ptr_->timestamp = uwb_msg_ptr->header.stamp.toSec();
 	// uwb_data_ptr->location << uwb_msg_ptr->x, uwb_msg_ptr->y, uwb_msg_ptr->z;
-	uwb_data_ptr_->location[0] = uwb_msg_ptr->x;
-	uwb_data_ptr_->location[1] = uwb_msg_ptr->y;
+	uwb_data_ptr_->location[0] = uwb_msg_ptr->pose.position.x;
+	uwb_data_ptr_->location[1] = uwb_msg_ptr->pose.position.y;
 
 	imu_gps_localizer_ptr_->ProcessUwbData(uwb_data_ptr_);
 

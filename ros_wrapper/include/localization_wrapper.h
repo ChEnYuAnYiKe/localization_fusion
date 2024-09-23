@@ -4,7 +4,7 @@
 #include <fstream>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
-#include <imu_gps_localization/uwb.h>
+// #include <imu_gps_localization/uwb.h>
 #include <memory>
 #include <nav_msgs/Path.h>
 #include <ros/ros.h>
@@ -22,7 +22,7 @@ public:
 	// void GpsPositionCallback(const sensor_msgs::NavSatFixConstPtr&
 	// gps_msg_ptr);
 
-	void UwbCallback(const imu_gps_localization::uwbConstPtr &uwb_msg_ptr);
+	void UwbCallback(const geometry_msgs::PoseStamped::ConstPtr &uwb_msg_ptr);
 
 	void LidarCallback(const geometry_msgs::PoseStamped::ConstPtr &lidar_msg_ptr);
 
