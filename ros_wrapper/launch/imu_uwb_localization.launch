@@ -1,11 +1,15 @@
 <launch>
+    <!-- Launch UWB localization system -->
+    <include file="$(find uwb_location)/launch/uwb_full.launch">
+    </include>
+
     <node name="imu_uwb_fusion_loc" pkg="imu_gps_localization" type="imu_gps_localization_node" output="screen">
         <remap from="/imu/data_raw" to = "/uav_0/mavros/imu/data_raw"/>
         <remap from="/uwb/data" to = "/uwb/location"/>
         <remap from="/lidar_position" to = "/uav_0/scan"/>
 
-        <!-- <remap from="/velocity" to = "/uav_0/fusion/velocity"/>
-        <remap from="/position" to = "/uav_0/fusion/position"/> -->
+        <remap from="/position" to = "/uav_0/fused_position"/>
+        <remap from="/velocity" to = "/uav_0/fused_velocity"/>
         <remap from="/odom" to = "/uav_0/fused_odom"/>
 
         <param name="acc_noise" type="double" value="2e-2" />
@@ -26,5 +30,4 @@
     </node>
     <!-- node pkg="rviz" type="rviz" name="rviz" output="screen" args="-d $(find imu_gps_localization)/ros_wrapper/rviz/default.rviz" required="true">
     </node -->
-
 </launch>

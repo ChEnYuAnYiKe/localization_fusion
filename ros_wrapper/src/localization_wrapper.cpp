@@ -51,10 +51,10 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
     // gps_pub_ = nh.advertise<nav_msgs::Path>("/gps_path", 50);
     uwb_pub_ = nh.advertise<nav_msgs::Path>("/uwb_path", 100);
 
-    // velocity_filter_pub_ =
-    //     nh.advertise<geometry_msgs::TwistStamped>("/velocity", 100);
-    // position_filter_pub_ =
-    //     nh.advertise<geometry_msgs::PoseStamped>("/position", 100);
+    position_filter_pub_ =
+        nh.advertise<geometry_msgs::PoseStamped>("/position", 100);
+    velocity_filter_pub_ =
+        nh.advertise<geometry_msgs::TwistStamped>("/velocity", 100);
 
     odom_pub_ = nh.advertise<nav_msgs::Odometry>("/odom", 100);
 }
@@ -88,8 +88,8 @@ void LocalizationWrapper::ImuCallback(
     // Publish fused state.
     ConvertStateToRosTopic(fused_state);
     // state_pub_.publish(ros_path_);
-    // velocity_filter_pub_.publish(velocity_filter_);
-    // position_filter_pub_.publish(position_filter_);
+    velocity_filter_pub_.publish(velocity_filter_);
+    position_filter_pub_.publish(position_filter_);
     odom_pub_.publish(fused_odom_);
 
     // Log fused state.
@@ -182,30 +182,30 @@ void LocalizationWrapper::LogState(const ImuGpsLocalization::State &state)
 void LocalizationWrapper::ConvertStateToRosTopic(
     const ImuGpsLocalization::State &state)
 {
-    // ros_path_.header.frame_id = "world";
-    // ros_path_.header.stamp = ros::Time::now();
+    ros_path_.header.frame_id = "world";
+    ros_path_.header.stamp = ros::Time::now();
 
-    // geometry_msgs::PoseStamped pose;
-    // pose.header = ros_path_.header;
+    geometry_msgs::PoseStamped pose;
+    pose.header = ros_path_.header;
 
-    // pose.pose.position.x = state.G_p_I[0];
-    // pose.pose.position.y = state.G_p_I[1];
-    // pose.pose.position.z = state.G_p_I[2];
+    pose.pose.position.x = state.G_p_I[0];
+    pose.pose.position.y = state.G_p_I[1];
+    pose.pose.position.z = state.G_p_I[2];
 
     const Eigen::Quaterniond G_q_I(state.G_R_I);
-    // pose.pose.orientation.x = G_q_I.x();
-    // pose.pose.orientation.y = G_q_I.y();
-    // pose.pose.orientation.z = G_q_I.z();
-    // pose.pose.orientation.w = G_q_I.w();
-    // ros_path_.poses.push_back(pose);
+    pose.pose.orientation.x = G_q_I.x();
+    pose.pose.orientation.y = G_q_I.y();
+    pose.pose.orientation.z = G_q_I.z();
+    pose.pose.orientation.w = G_q_I.w();
+    ros_path_.poses.push_back(pose);
 
-    // velocity_filter_.header.frame_id = "world";
-    // velocity_filter_.header.stamp = ros::Time::now();
-    // velocity_filter_.twist.linear.x = state.G_v_I[0];
-    // velocity_filter_.twist.linear.y = state.G_v_I[1];
-    // velocity_filter_.twist.linear.z = state.G_v_I[2];
+    velocity_filter_.header.frame_id = "world";
+    velocity_filter_.header.stamp = ros::Time::now();
+    velocity_filter_.twist.linear.x = state.G_v_I[0];
+    velocity_filter_.twist.linear.y = state.G_v_I[1];
+    velocity_filter_.twist.linear.z = state.G_v_I[2];
 
-    // position_filter_ = pose;
+    position_filter_ = pose;
 
     // odom msg
     fused_odom_.header.frame_id = "world";
