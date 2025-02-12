@@ -7,9 +7,11 @@
 // #include <imu_gps_localization/uwb.h>
 #include <memory>
 #include <nav_msgs/Path.h>
+#include <nav_msgs/Odometry.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h>
+#include <sensor_msgs/LaserScan.h>
 
 class LocalizationWrapper
 {
@@ -24,7 +26,9 @@ public:
 
 	void UwbCallback(const geometry_msgs::PoseStamped::ConstPtr &uwb_msg_ptr);
 
-	void LidarCallback(const geometry_msgs::PoseStamped::ConstPtr &lidar_msg_ptr);
+	// void LidarCallback(const geometry_msgs::PoseStamped::ConstPtr &lidar_msg_ptr);
+
+    void LidarCallback(const sensor_msgs::LaserScan::ConstPtr &lidar_msg_ptr);
 
 private:
 	void LogState(const ImuGpsLocalization::State &state);
@@ -47,8 +51,9 @@ private:
 	ros::Publisher uwb_pub_;
 	ros::Publisher velocity_filter_pub_;
 	ros::Publisher position_filter_pub_;
+    ros::Publisher odom_pub_;
 
-	std::ofstream file_state_;
+    std::ofstream file_state_;
 	// std::ofstream file_gps_;
 	std::ofstream file_uwb_;
 
@@ -62,6 +67,7 @@ private:
 
 	geometry_msgs::TwistStamped velocity_filter_;
 	geometry_msgs::PoseStamped position_filter_;
+    nav_msgs::Odometry fused_odom_;
 
 	std::unique_ptr<ImuGpsLocalization::ImuGpsLocalizer> imu_gps_localizer_ptr_;
 };
