@@ -46,6 +46,8 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
         nh.subscribe("/uwb/data", 100, &LocalizationWrapper::UwbCallback, this);
     lidar_sub_ = nh.subscribe("/lidar_position", 100,
                               &LocalizationWrapper::LidarCallback, this);
+    attitude_sub_ = nh.subscribe("/imu_outside", 100,
+                                 &LocalizationWrapper::attitudeCallback, this);
 
     state_pub_ = nh.advertise<nav_msgs::Path>("/fused_path", 100);
     // gps_pub_ = nh.advertise<nav_msgs::Path>("/gps_path", 50);
@@ -152,6 +154,20 @@ void LocalizationWrapper::LidarCallback(
     uwb_data_ptr_->location[2] = lidar_msg_ptr->ranges[0];
 }
 
+void LocalizationWrapper::attitudeCallback(const sensor_msgs::Imu::ConstPtr &msg)
+{
+    sensor_msgs::Imu current_imu_status = *msg;
+    tf::Quaternion iq;
+
+    tf::quaternionMsgToTF(current_imu_status.orientation, iq);
+    tf::Matrix3x3(iq).getRPY(attitude_ahrs_[0], attitude_ahrs_[1], attitude_ahrs_[2]);
+
+    attitude_ahrs_[1] = -attitude_ahrs_[1];
+    attitude_ahrs_[2] = -attitude_ahrs_[2];
+
+    modified_iq = tf::createQuaternionFromRPY(attitude_ahrs_[0], attitude_ahrs_[1], attitude_ahrs_[2]);
+}
+
 void LocalizationWrapper::LogState(const ImuGpsLocalization::State &state)
 {
     // const Eigen::Quaterniond G_q_I(state.G_R_I);
@@ -192,11 +208,15 @@ void LocalizationWrapper::ConvertStateToRosTopic(
     pose.pose.position.y = state.G_p_I[1];
     pose.pose.position.z = state.G_p_I[2];
 
-    const Eigen::Quaterniond G_q_I(state.G_R_I);
-    pose.pose.orientation.x = G_q_I.x();
-    pose.pose.orientation.y = G_q_I.y();
-    pose.pose.orientation.z = G_q_I.z();
-    pose.pose.orientation.w = G_q_I.w();
+    // const Eigen::Quaterniond G_q_I(state.G_R_I);
+    // pose.pose.orientation.x = G_q_I.x();
+    // pose.pose.orientation.y = G_q_I.y();
+    // pose.pose.orientation.z = G_q_I.z();
+    // pose.pose.orientation.w = G_q_I.w();
+    pose.pose.orientation.x = modified_iq.x();
+    pose.pose.orientation.y = modified_iq.y();
+    pose.pose.orientation.z = modified_iq.z();
+    pose.pose.orientation.w = modified_iq.w();
     ros_path_.poses.push_back(pose);
 
     velocity_filter_.header.frame_id = "world";
@@ -216,10 +236,10 @@ void LocalizationWrapper::ConvertStateToRosTopic(
     fused_odom_.twist.twist.linear.x = state.G_v_I[0];
     fused_odom_.twist.twist.linear.y = state.G_v_I[1];
     fused_odom_.twist.twist.linear.z = state.G_v_I[2];
-    fused_odom_.pose.pose.orientation.x = G_q_I.x();
-    fused_odom_.pose.pose.orientation.y = G_q_I.y();
-    fused_odom_.pose.pose.orientation.z = G_q_I.z();
-    fused_odom_.pose.pose.orientation.w = G_q_I.w();
+    fused_odom_.pose.pose.orientation.x = modified_iq.x();
+    fused_odom_.pose.pose.orientation.y = modified_iq.y();
+    fused_odom_.pose.pose.orientation.z = modified_iq.z();
+    fused_odom_.pose.pose.orientation.w = modified_iq.w();
 }
 
 // void LocalizationWrapper::ConvertGps_enuToRosTopic(const Eigen::Vector3d&

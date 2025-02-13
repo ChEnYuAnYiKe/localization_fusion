@@ -9,6 +9,7 @@
 #include <nav_msgs/Path.h>
 #include <nav_msgs/Odometry.h>
 #include <ros/ros.h>
+#include <tf/tf.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/LaserScan.h>
@@ -30,6 +31,8 @@ public:
 
     void LidarCallback(const sensor_msgs::LaserScan::ConstPtr &lidar_msg_ptr);
 
+    void attitudeCallback(const sensor_msgs::Imu::ConstPtr &msg);
+
 private:
 	void LogState(const ImuGpsLocalization::State &state);
 	// void LogGps(const ImuGpsLocalization::GpsPositionDataPtr gps_data,
@@ -45,8 +48,9 @@ private:
 	// ros::Subscriber gps_position_sub_;
 	ros::Subscriber uwb_sub_;
 	ros::Subscriber lidar_sub_;
+    ros::Subscriber attitude_sub_;
 
-	ros::Publisher state_pub_;
+    ros::Publisher state_pub_;
 	// ros::Publisher gps_pub_;
 	ros::Publisher uwb_pub_;
 	ros::Publisher velocity_filter_pub_;
@@ -69,5 +73,9 @@ private:
 	geometry_msgs::PoseStamped position_filter_;
     nav_msgs::Odometry fused_odom_;
 
-	std::unique_ptr<ImuGpsLocalization::ImuGpsLocalizer> imu_gps_localizer_ptr_;
+    // for the attitude from the ahrs_imu
+    Eigen::Vector3d attitude_ahrs_;
+    tf::Quaternion modified_iq;
+
+    std::unique_ptr<ImuGpsLocalization::ImuGpsLocalizer> imu_gps_localizer_ptr_;
 };
