@@ -11,6 +11,7 @@
         <remap from="/imu/data_raw" to = "/uav_0/mavros/imu/data_raw"/>
         <remap from="/uwb/data" to = "/uwb/location"/>
         <remap from="/lidar_position" to = "/uav_0/scan"/>
+        <remap from="/imu_outside" to="/uav_0/ahrs/imu"/>
 
         <remap from="/position" to = "/uav_0/fused_position"/>
         <remap from="/velocity" to = "/uav_0/fused_velocity"/>
