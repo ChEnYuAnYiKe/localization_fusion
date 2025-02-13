@@ -1,4 +1,8 @@
 <launch>
+    <!-- Launch mavros -->
+    <include file="$(find mavros)/launch/px4.launch">
+    </include>
+
     <!-- Launch UWB localization system -->
     <include file="$(find uwb_location)/launch/uwb_full.launch">
     </include>

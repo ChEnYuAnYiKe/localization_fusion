@@ -54,8 +54,8 @@ bool Initializer::AddGpsPositionData(const GpsPositionDataPtr gps_data_ptr,
 
 	// Set covariance.
 	state->cov.setZero();
-	Eigen::Vector3d pos_cov(40., 40., 100);
-	Eigen::Vector3d vel_cov(40., 40., 100);
+	Eigen::Vector3d pos_cov(40., 40., 1);
+	Eigen::Vector3d vel_cov(40., 40., 1);
 	state->cov.block<3, 3>(0, 0) = pos_cov.asDiagonal(); // position std
 	state->cov.block<3, 3>(3, 3) = vel_cov.asDiagonal(); // velocity std
 	// roll pitch std 10 degree.
