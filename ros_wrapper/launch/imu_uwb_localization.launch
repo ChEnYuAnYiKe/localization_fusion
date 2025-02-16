@@ -1,11 +1,7 @@
 <launch>
-    <!-- Launch mavros -->
-    <include file="$(find mavros)/launch/px4.launch">
-    </include>
-
     <!-- Launch UWB localization system -->
-    <include file="$(find uwb_location)/launch/uwb_full.launch">
-    </include>
+    <!-- <include file="$(find uwb_location)/launch/uwb_full.launch">
+    </include> -->
 
     <node name="imu_uwb_fusion_loc" pkg="imu_gps_localization" type="imu_gps_localization_node" output="screen">
         <remap from="/imu/data_raw" to = "/uav_0/mavros/imu/data_raw"/>
