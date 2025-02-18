@@ -39,11 +39,11 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
 
     // Subscribe topics.  mavros中的imu话题为/mavros/imu/data
     imu_sub_ = nh.subscribe("/imu/data_raw", 100,
-                            &LocalizationWrapper::ImuCallback, this);
+                            &LocalizationWrapper::ImuCallback, this, ros::TransportHints().tcpNoDelay());
     // gps_position_sub_ = nh.subscribe("/fix", 50,
     // &LocalizationWrapper::GpsPositionCallback, this);
     uwb_sub_ =
-        nh.subscribe("/uwb/data", 100, &LocalizationWrapper::UwbCallback, this);
+        nh.subscribe("/uwb/data", 100, &LocalizationWrapper::UwbCallback, this, ros::TransportHints().tcpNoDelay());
     lidar_sub_ = nh.subscribe("/lidar_position", 100,
                               &LocalizationWrapper::LidarCallback, this);
     attitude_sub_ = nh.subscribe("/imu_outside", 100,
