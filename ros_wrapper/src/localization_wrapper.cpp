@@ -38,27 +38,27 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
             I_p_Uwb);
 
     // Subscribe topics.  mavros中的imu话题为/mavros/imu/data
-    imu_sub_ = nh.subscribe("/imu/data_raw", 100,
+    imu_sub_ = nh.subscribe("/imu/data_raw", 20,
                             &LocalizationWrapper::ImuCallback, this, ros::TransportHints().tcpNoDelay());
     // gps_position_sub_ = nh.subscribe("/fix", 50,
     // &LocalizationWrapper::GpsPositionCallback, this);
     uwb_sub_ =
-        nh.subscribe("/uwb/data", 100, &LocalizationWrapper::UwbCallback, this, ros::TransportHints().tcpNoDelay());
-    lidar_sub_ = nh.subscribe("/lidar_position", 100,
-                              &LocalizationWrapper::LidarCallback, this);
-    attitude_sub_ = nh.subscribe("/imu_outside", 100,
-                                 &LocalizationWrapper::attitudeCallback, this);
+        nh.subscribe("/uwb/data", 20, &LocalizationWrapper::UwbCallback, this, ros::TransportHints().tcpNoDelay());
+    lidar_sub_ = nh.subscribe("/lidar_position", 20,
+                              &LocalizationWrapper::LidarCallback, this, ros::TransportHints().tcpNoDelay());
+    attitude_sub_ = nh.subscribe("/imu_outside", 20,
+                                 &LocalizationWrapper::attitudeCallback, this, ros::TransportHints().tcpNoDelay());
 
-    state_pub_ = nh.advertise<nav_msgs::Path>("/fused_path", 100);
+    state_pub_ = nh.advertise<nav_msgs::Path>("/fused_path", 20);
     // gps_pub_ = nh.advertise<nav_msgs::Path>("/gps_path", 50);
-    uwb_pub_ = nh.advertise<nav_msgs::Path>("/uwb_path", 100);
+    uwb_pub_ = nh.advertise<nav_msgs::Path>("/uwb_path", 20);
 
     position_filter_pub_ =
-        nh.advertise<geometry_msgs::PoseStamped>("/position", 100);
+        nh.advertise<geometry_msgs::PoseStamped>("/position", 10);
     velocity_filter_pub_ =
-        nh.advertise<geometry_msgs::TwistStamped>("/velocity", 100);
+        nh.advertise<geometry_msgs::TwistStamped>("/velocity", 10);
 
-    odom_pub_ = nh.advertise<nav_msgs::Odometry>("/odom", 100);
+    odom_pub_ = nh.advertise<nav_msgs::Odometry>("/odom", 10);
 }
 
 LocalizationWrapper::~LocalizationWrapper()
