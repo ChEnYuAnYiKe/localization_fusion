@@ -2,6 +2,9 @@
 #include "imu_gps_localizer/base_type.h"
 #include <iomanip>
 
+#include <cstdlib>
+#include <ctime>
+
 LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
 {
     // Load configs.
@@ -25,6 +28,13 @@ LocalizationWrapper::LocalizationWrapper(ros::NodeHandle &nh)
 
     std::string log_folder = "/home";
     ros::param::get("log_folder", log_folder);
+
+    nh.param("ransac_buffer_size", ransac_buffer_size_, 50);
+    nh.param("ransac_iterations", ransac_iterations_, 50);
+    nh.param("ransac_distance_threshold", ransac_distance_threshold_, 0.04); // 默认4cm
+
+    // 初始化滤波后的高度为一个安全值
+    filtered_lidar_z_ = 0.0;
 
     // Log.
     // file_state_.open(log_folder + "/state.csv");
@@ -125,16 +135,38 @@ void LocalizationWrapper::ImuCallback(
 //     //LogGps(gps_data_ptr, gps_enu);
 // }
 
+// void LocalizationWrapper::UwbCallback(
+//     const geometry_msgs::PoseStamped::ConstPtr &uwb_msg_ptr)
+// {
+//     // ImuGpsLocalization::UwbDataPtr uwb_data_ptr =
+//     // std::make_shared<ImuGpsLocalization::UwbData>();
+//     uwb_data_ptr_->timestamp = uwb_msg_ptr->header.stamp.toSec();
+//     // uwb_data_ptr->location << uwb_msg_ptr->x, uwb_msg_ptr->y, uwb_msg_ptr->z;
+//     uwb_data_ptr_->location[0] = uwb_msg_ptr->pose.position.x;
+//     uwb_data_ptr_->location[1] = uwb_msg_ptr->pose.position.y;
+
+//     imu_gps_localizer_ptr_->ProcessUwbData(uwb_data_ptr_);
+
+//     ConvertUwbToRosTopic(uwb_data_ptr_);
+//     // uwb_pub_.publish(uwb_path_);
+// }
+
 void LocalizationWrapper::UwbCallback(
     const geometry_msgs::PoseStamped::ConstPtr &uwb_msg_ptr)
 {
-    // ImuGpsLocalization::UwbDataPtr uwb_data_ptr =
-    // std::make_shared<ImuGpsLocalization::UwbData>();
+    // 在LiDAR滤波器初始化完成前，不处理UWB数据
+    if (!lidar_initialized_)
+    {
+        return;
+    }
+
     uwb_data_ptr_->timestamp = uwb_msg_ptr->header.stamp.toSec();
-    // uwb_data_ptr->location << uwb_msg_ptr->x, uwb_msg_ptr->y, uwb_msg_ptr->z;
     uwb_data_ptr_->location[0] = uwb_msg_ptr->pose.position.x;
     uwb_data_ptr_->location[1] = uwb_msg_ptr->pose.position.y;
+    // 关键修改：使用成员变量中存储的、经过RANSAC滤波后的高度值
+    uwb_data_ptr_->location[2] = filtered_lidar_z_;
 
+    // 将干净的(x, y, z)数据送入ESKF进行处理
     imu_gps_localizer_ptr_->ProcessUwbData(uwb_data_ptr_);
 
     ConvertUwbToRosTopic(uwb_data_ptr_);
@@ -148,11 +180,101 @@ void LocalizationWrapper::UwbCallback(
 // 	uwb_data_ptr_->location[2] = current_lidar_vz_.pose.position.z;
 // }
 
+// RANSAC核心算法实现
+void LocalizationWrapper::runRansac()
+{
+    // 缓冲区中的点太少，无法稳定地进行拟合，直接使用最新的原始值
+    if (ransac_buffer_.size() < 10)
+    {
+        filtered_lidar_z_ = ransac_buffer_.back().z;
+        return;
+    }
+
+    int best_inlier_count = 0;
+    double best_model_z = 0;
+
+    // 初始化随机数种子
+    std::srand(std::time(nullptr));
+
+    for (int i = 0; i < ransac_iterations_; ++i)
+    {
+        // 1. 随机选择一个点作为我们的“模型”候选（在平面场景下，模型就是一个z值）
+        int random_index = std::rand() % ransac_buffer_.size();
+        double candidate_z = ransac_buffer_[random_index].z;
+
+        // 2. 统计这个模型获得了多少“内点”支持
+        int current_inlier_count = 0;
+        for (const auto &point : ransac_buffer_)
+        {
+            if (std::abs(point.z - candidate_z) < ransac_distance_threshold_)
+            {
+                current_inlier_count++;
+            }
+        }
+
+        // 3. 如果当前模型是至今为止最好的，则记录下来
+        if (current_inlier_count > best_inlier_count)
+        {
+            best_inlier_count = current_inlier_count;
+            best_model_z = candidate_z;
+        }
+    }
+
+    // 4. 模型优化：使用所有属于最佳模型的内点，计算它们的平均z值，作为最终结果
+    double refined_z_sum = 0;
+    int refined_inlier_count = 0;
+    for (const auto &point : ransac_buffer_)
+    {
+        if (std::abs(point.z - best_model_z) < ransac_distance_threshold_)
+        {
+            refined_z_sum += point.z;
+            refined_inlier_count++;
+        }
+    }
+
+    if (refined_inlier_count > 0)
+    {
+        filtered_lidar_z_ = refined_z_sum / refined_inlier_count;
+    }
+    else
+    {
+        // 极端情况：如果没有找到任何内点，则回退到使用最新的原始值
+        filtered_lidar_z_ = ransac_buffer_.back().z;
+    }
+}
+
+// LidarCallback现在负责填充数据缓冲区并调用RANSAC滤波器
 void LocalizationWrapper::LidarCallback(
     const sensor_msgs::LaserScan::ConstPtr &lidar_msg_ptr)
 {
-    uwb_data_ptr_->location[2] = lidar_msg_ptr->ranges[0];
+    // 创建一个新的数据点，x,y来自最新的融合里程计，z来自LiDAR原始读数
+    RansacPoint new_point;
+    new_point.x = fused_odom_.pose.pose.position.x;
+    new_point.y = fused_odom_.pose.pose.position.y;
+    new_point.z = lidar_msg_ptr->ranges[0];
+
+    // 将新数据点加入滑动窗口缓冲区
+    ransac_buffer_.push_back(new_point);
+    if (ransac_buffer_.size() > ransac_buffer_size_)
+    {
+        ransac_buffer_.pop_front();
+    }
+
+    // 调用RANSAC算法，计算并更新成员变量 filtered_lidar_z_
+    runRansac();
+
+    // 收到第一个有效数据后，将初始化标记设置为true
+    if (!lidar_initialized_)
+    {
+        lidar_initialized_ = true;
+    }
 }
+
+// void LocalizationWrapper::LidarCallback(
+//     const sensor_msgs::LaserScan::ConstPtr &lidar_msg_ptr)
+// {
+//     uwb_data_ptr_->location[2] = lidar_msg_ptr->ranges[0];
+// }
 
 void LocalizationWrapper::attitudeCallback(const sensor_msgs::Imu::ConstPtr &msg)
 {

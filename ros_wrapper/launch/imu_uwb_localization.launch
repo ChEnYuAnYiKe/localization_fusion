@@ -26,6 +26,11 @@
         <param name="I_p_Uwb_y" type="double" value="0.0" />
         <param name="I_p_Uwb_z" type="double" value="0.0" />
 
+        <!-- RANSAC参数 -->
+        <param name="ransac_buffer_size" value="60"/>      
+        <param name="ransac_iterations" value="60"/>       
+        <param name="ransac_distance_threshold" value="0.02"/>
+
         <param name="log_folder" type="string" value="$(find imu_gps_localization)" />
 
     </node>

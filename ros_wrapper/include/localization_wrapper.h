@@ -2,6 +2,7 @@
 
 #include "imu_gps_localizer/imu_gps_localizer.h"
 #include <fstream>
+#include <deque>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 // #include <imu_gps_localization/uwb.h>
@@ -44,6 +45,9 @@ private:
 
 	void ConvertUwbToRosTopic(const ImuGpsLocalization::UwbDataPtr &uwb_data);
 
+    // RANSAC核心逻辑的私有成员函数
+    void runRansac();
+
 	ros::Subscriber imu_sub_;
 	// ros::Subscriber gps_position_sub_;
 	ros::Subscriber uwb_sub_;
@@ -78,4 +82,17 @@ private:
     tf::Quaternion modified_iq;
 
     std::unique_ptr<ImuGpsLocalization::ImuGpsLocalizer> imu_gps_localizer_ptr_;
+    
+    // 新增：RANSAC滤波器相关的成员变量
+private:
+    // 用于存储带有位置信息的LiDAR测量点的结构体
+    struct RansacPoint {
+        double x, y, z;
+    };
+    std::deque<RansacPoint> ransac_buffer_;     // 作为滑动窗口的数据缓冲区
+    int ransac_buffer_size_;                    // 缓冲区大小
+    int ransac_iterations_;                     // RANSAC迭代次数
+    double ransac_distance_threshold_;          // 判断内点（inlier）的距离阈值
+    double filtered_lidar_z_;                   // 存储滤波后干净的高度值
+    bool lidar_initialized_ = false;            // 标记LiDAR滤波器是否已初始化
 };
